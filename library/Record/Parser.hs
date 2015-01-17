@@ -1,6 +1,6 @@
 module Record.Parser where
 
-import BasePrelude hiding (takeWhile)
+import BasePrelude hiding (takeWhile, exp)
 import Data.Text (Text)
 import Data.Attoparsec.Text
 import qualified Data.Text as T
@@ -101,6 +101,14 @@ upperCaseName =
       satisfy (\c -> isUpper c || c == '_') <*>
       takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
 
+symbolicIdent :: Parser Text
+symbolicIdent =
+  labeled "symbolicIdent" $
+    (\t -> "(" <> t <> ")") <$> (char '(' *> takeWhile1 isSymbol <* char ')')
+  where
+    isSymbol =
+      flip elem ("!#$%&*+./<=>?@\\^|-~" :: [Char])
+
 stringLit :: Parser Text
 stringLit =
   quoted '"'
@@ -127,4 +135,79 @@ lens :: Parser Lens
 lens =
   labeled "lens" $
     sepBy1 lowerCaseName (char '.')
+
+
+data Exp =
+  Exp_Record RecordExp |
+  Exp_Var Text |
+  Exp_Con Text |
+  Exp_TupleCon Int |
+  Exp_Nil |
+  Exp_Lit Lit |
+  Exp_App Exp Exp |
+  Exp_List [Exp] |
+  Exp_Sig Exp Type
+
+type RecordExp =
+  [(Text, Exp)]
+
+data Lit =
+  Lit_Char Char |
+  Lit_String Text |
+  Lit_Integer Integer |
+  Lit_Rational Rational
+
+exp :: Parser Exp
+exp =
+  labeled "exp" $
+    sig <|> nonSig
+  where
+    sig =
+      Exp_Sig <$> nonSig <*> (skipSpace *> string "::" *> skipSpace *> type')
+    nonSig =
+      app <|> nonApp
+      where
+        app =
+          fmap (foldl1 Exp_App) $
+          sepBy1 nonApp (skipMany1 space)
+        nonApp =
+          record <|>
+          var <|>
+          con <|>
+          tupleCon <|>
+          nil <|>
+          Exp_Lit <$> lit <|>
+          tuple <|>
+          inBraces exp
+          where
+            record =
+              Exp_Record <$> (char '{' *> skipSpace *> fields <* skipSpace <* char '}')
+              where
+                fields =
+                  sepBy1 field (skipSpace *> char ',' <* skipSpace)
+                  where
+                    field =
+                      (,) <$> lowerCaseName <*> (skipSpace *> char '=' *> skipSpace *> exp)
+            var =
+              Exp_Var <$> (lowerCaseName <|> symbolicIdent)
+            con =
+              Exp_Con <$> (upperCaseName <|> symbolicIdent)
+            tupleCon =
+              Exp_TupleCon . length <$> 
+              (char '(' *> many1 (char ',') <* char ')')
+            nil =
+              Exp_Nil <$ string "[]"
+            tuple =
+              fmap (\l -> foldl Exp_App (Exp_TupleCon (length l)) l) $
+                char '(' *> skipSpace *>
+                sepBy1 exp (skipSpace *> char ',' <* skipSpace)
+                <* skipSpace <* char ')'
+
+lit :: Parser Lit
+lit =
+  Lit_Char <$> charLit <|>
+  Lit_String <$> stringLit <|>
+  Lit_Integer <$> decimal <|>
+  Lit_Rational <$> rational
+
 

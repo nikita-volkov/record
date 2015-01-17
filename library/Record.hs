@@ -12,15 +12,19 @@ import qualified Data.Text as T
 record :: QuasiQuoter
 record =
   QuasiQuoter
-    (const $ fail "Expression context is not supported")
+    (exp)
     (const $ fail "Pattern context is not supported")
     (type')
     (const $ fail "Declaration context is not supported")
   where
-    type' =
-      join . fmap (either fail return . renderRecordType) .
+    exp =
+      join . fmap (either fail return . renderExp) .
       either (fail . showString "Parser failure: ") return .
-      Parser.run (Parser.qq Parser.recordType) . fromString
+      Parser.run (Parser.qq Parser.exp) . fromString
+    type' =
+      join . fmap (either fail return . renderType) .
+      either (fail . showString "Parser failure: ") return .
+      Parser.run (Parser.qq Parser.type') . fromString
 
 lens :: QuasiQuoter
 lens =
@@ -52,10 +56,10 @@ renderSingleLens =
 
 renderRecordType :: Parser.RecordType -> Either String Type
 renderRecordType l =
-  checkRepeatedLabels >> getRecordTypeName >>= constructType
+  checkDuplicateLabels >> getRecordTypeName >>= constructType
   where
-    checkRepeatedLabels =
-      maybe (return ()) (Left . showString "Repeated labels: " . show) $
+    checkDuplicateLabels =
+      maybe (return ()) (Left . showString "Duplicate labels: " . show) $
       mfilter (not . null) . Just $ 
       map (fst . head) $
       filter ((> 1) . length) $
@@ -82,6 +86,14 @@ recordTypeNameByArity =
     3 -> Just ''Types.Record3
     _ -> Nothing
 
+recordConNameByArity :: Int -> Maybe Name
+recordConNameByArity =
+  \case
+    1 -> Just 'Types.Record1
+    2 -> Just 'Types.Record2
+    3 -> Just 'Types.Record3
+    _ -> Nothing
+  
 renderType :: Parser.Type -> Either String Type
 renderType =
   \case
@@ -93,5 +105,46 @@ renderType =
     Parser.Type_List     -> Right $ ListT
     Parser.Type_Record a -> renderRecordType a
 
+renderExp :: Parser.Exp -> Either String Exp
+renderExp =
+  \case
+    Parser.Exp_Record r -> renderRecordExp r
+    Parser.Exp_Var n -> return $ VarE (mkName (T.unpack n))
+    Parser.Exp_Con n -> return $ ConE (mkName (T.unpack n))
+    Parser.Exp_TupleCon a -> return $ ConE (tupleDataName a)
+    Parser.Exp_Nil -> return $ ConE ('[])
+    Parser.Exp_Lit l -> return $ LitE (renderLit l)
+    Parser.Exp_App a b -> AppE <$> renderExp a <*> renderExp b
+    Parser.Exp_List l -> ListE <$> traverse renderExp l
+    Parser.Exp_Sig e t -> SigE <$> renderExp e <*> renderType t
+
+renderRecordExp :: Parser.RecordExp -> Either String Exp
+renderRecordExp l =
+  checkDuplicateLabels >> getRecordConName >>= constructExp
+  where
+    checkDuplicateLabels =
+      maybe (return ()) (Left . showString "Duplicate labels: " . show) $
+      mfilter (not . null) . Just $ 
+      map (fst . head) $
+      filter ((> 1) . length) $
+      groupWith fst l
+    getRecordConName =
+      maybe (Left (showString "Record arity " . shows arity . shows " is not supported" $ ""))
+            (Right) $
+      recordConNameByArity arity
+      where
+        arity = length l
+    constructExp n =
+      foldl (\a (l, e) -> AppE <$> a <*> renderExp e)
+            (pure (ConE n))
+            (sortWith fst l)
+
+renderLit :: Parser.Lit -> Lit
+renderLit =
+  \case
+    Parser.Lit_Char c -> CharL c
+    Parser.Lit_String t -> StringL (T.unpack t)
+    Parser.Lit_Integer i -> IntegerL i
+    Parser.Lit_Rational r -> RationalL r
 
 
