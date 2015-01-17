@@ -45,9 +45,14 @@ library
   other-modules:
   exposed-modules:
     Record.Field
+    Record.Parser
     Record.Lens
     Record
   build-depends:
+    -- 
+    attoparsec >= 0.10 && < 0.13,
+    -- 
+    text,
     --
     template-haskell,
     -- 
