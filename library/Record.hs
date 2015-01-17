@@ -14,17 +14,41 @@ record =
   QuasiQuoter
     (const $ fail "Expression context is not supported")
     (const $ fail "Pattern context is not supported")
-    type'
+    (type')
     (const $ fail "Declaration context is not supported")
   where
     type' =
       join . fmap (either fail return . renderRecordType) .
       either (fail . showString "Parser failure: ") return .
-      Parser.run Parser.recordQQ . fromString
+      Parser.run (Parser.qq Parser.recordType) . fromString
 
 lens :: QuasiQuoter
 lens =
-  undefined
+  QuasiQuoter
+    (exp)
+    (const $ fail "Pattern context is not supported")
+    (const $ fail "Type context is not supported")
+    (const $ fail "Declaration context is not supported")
+  where
+    exp =
+      either (fail . showString "Parser failure: ") return .
+      fmap renderLens .
+      Parser.run (Parser.qq Parser.lens) . fromString
+
+renderLens :: Parser.Lens -> Exp
+renderLens =
+  foldl1 composition .
+  fmap renderSingleLens
+  where
+    composition a b = 
+      UInfixE a (VarE '(.)) b
+
+renderSingleLens :: T.Text -> Exp
+renderSingleLens =
+  AppE (VarE 'Types.lens) .
+  SigE (ConE 'Proxy) .
+  AppT (ConT ''Proxy) .
+  LitT . StrTyLit . T.unpack
 
 renderRecordType :: Parser.RecordType -> Either String Type
 renderRecordType l =

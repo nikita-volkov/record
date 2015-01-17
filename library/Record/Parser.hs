@@ -33,13 +33,18 @@ run p t =
         Done _ a -> Right a
         Partial c -> onResult (c "")
 
-recordQQ :: Parser RecordType
-recordQQ =
-  skipSpace *> recordType <* skipSpace <* endOfInput
+labeled :: String -> Parser a -> Parser a
+labeled =
+  flip (<?>)
+
+qq :: Parser a -> Parser a
+qq p =
+  skipSpace *> p <* skipSpace <* endOfInput
 
 type' :: Parser Type
 type' =
-  appType <|> nonAppType <?> "type'"
+  labeled "type'" $
+  appType <|> nonAppType
   where
     appType =
       fmap (foldl1 AppType) $
@@ -49,9 +54,9 @@ type' =
       arrowType <|> (RecordType <$> recordType) <|> inBraces type'
       where
         varType =
-          fmap VarType $ name1
+          fmap VarType $ lowerCaseName
         conType =
-          fmap ConType $ name2
+          fmap ConType $ upperCaseName
         tupleConType =
           fmap TupleType $ 
             char '(' *> (length <$> many1 (skipSpace *> char ',')) <* skipSpace <* char ')'
@@ -67,32 +72,34 @@ type' =
 
 recordType :: Parser RecordType
 recordType =
-  char '{' *> skipSpace *> sepBy1' field (skipSpace *> char ',' <* skipSpace) <* skipSpace <* char '}'
-    <?> "recordType"
+  labeled "recordType" $
+    char '{' *> skipSpace *> sepBy1' field (skipSpace *> char ',' <* skipSpace) <* skipSpace <* char '}'
   where
     field =
-      (,) <$> (name1 <* skipSpace <* string "::" <* skipSpace) <*> type'
+      (,) <$> (lowerCaseName <* skipSpace <* string "::" <* skipSpace) <*> type'
 
 qualifiedName1 :: Parser QualifiedName
 qualifiedName1 =
-  ((\a b -> a <> pure b) <$> many1 (name2 <* char '.') <*> name1) <|> 
-  (pure <$> name1)
+  ((\a b -> a <> pure b) <$> many1 (upperCaseName <* char '.') <*> lowerCaseName) <|> 
+  (pure <$> lowerCaseName)
 
 inBraces :: Parser a -> Parser a
 inBraces p =
   char '(' *> skipSpace *> p <* skipSpace <* char ')'
 
-name1 :: Parser Text
-name1 =
-  T.cons <$>
-    satisfy (\c -> isLower c) <*>
-    takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
+lowerCaseName :: Parser Text
+lowerCaseName =
+  labeled "lowerCaseName" $
+    T.cons <$>
+      satisfy (\c -> isLower c) <*>
+      takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
 
-name2 :: Parser Text
-name2 =
-  T.cons <$>
-    satisfy (\c -> isUpper c) <*>
-    takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
+upperCaseName :: Parser Text
+upperCaseName =
+  labeled "upperCaseName" $
+    T.cons <$>
+      satisfy (\c -> isUpper c) <*>
+      takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 stringLit :: Parser Text
 stringLit =
@@ -111,3 +118,13 @@ stringLit =
 charLit :: Parser Char
 charLit =
   char '\'' *> ((char '\\' *> (char '\'' <|> char '\\')) <|> notChar '\'') <* char '\''
+
+
+type Lens =
+  [Text]
+
+lens :: Parser Lens
+lens =
+  labeled "lens" $
+    sepBy1 lowerCaseName (char '.')
+
