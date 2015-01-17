@@ -91,14 +91,14 @@ lowerCaseName :: Parser Text
 lowerCaseName =
   labeled "lowerCaseName" $
     T.cons <$>
-      satisfy (\c -> isLower c) <*>
+      satisfy (\c -> isLower c || c == '_') <*>
       takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 upperCaseName :: Parser Text
 upperCaseName =
   labeled "upperCaseName" $
     T.cons <$>
-      satisfy (\c -> isUpper c) <*>
+      satisfy (\c -> isUpper c || c == '_') <*>
       takeWhile (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 stringLit :: Parser Text
