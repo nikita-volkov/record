@@ -9,22 +9,22 @@ main =
   return ()
 
 
-type User = 
+type Person = 
   [record| {name :: String, birthday :: {year :: Int, month :: Int, day :: Int}} |]
 
-getUserBirthdayYear :: User -> Int
-getUserBirthdayYear =
+getPersonBirthdayYear :: Person -> Int
+getPersonBirthdayYear =
   view [lens|birthday.year|]
 
-setUserBirthdayYear :: Int -> User -> User
-setUserBirthdayYear =
+setPersonBirthdayYear :: Int -> Person -> Person
+setPersonBirthdayYear =
   set [lens|birthday.year|]
 
-userBirthdayYearLens :: Lens User Int
-userBirthdayYearLens =
+personBirthdayYearLens :: Lens Person Int
+personBirthdayYearLens =
   [lens|birthday.year|]
 
-userBirthdayYearLens' :: Lens User Int
-userBirthdayYearLens' =
+personBirthdayYearLens' :: Lens Person Int
+personBirthdayYearLens' =
   [lens|birthday|] . [lens|year|]
 
