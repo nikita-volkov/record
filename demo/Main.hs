@@ -12,5 +12,6 @@ main =
 type User = 
   [record| {name :: String, birthday :: {year :: Int, month :: Int, day :: Int}} |]
 
+userBirthdayYearLens :: Lens User Int
 userBirthdayYearLens =
   [lens| birthday.year |]
