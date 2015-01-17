@@ -85,13 +85,13 @@ recordTypeNameByArity =
 renderType :: Parser.Type -> Either String Type
 renderType =
   \case
-    Parser.AppType a b  -> AppT <$> renderType a <*> renderType b
-    Parser.VarType n    -> Right $ VarT (mkName (T.unpack n))
-    Parser.ConType n    -> Right $ ConT (mkName (T.unpack n))
-    Parser.TupleType a  -> Right $ TupleT a
-    Parser.ArrowType    -> Right $ ArrowT
-    Parser.ListType     -> Right $ ListT
-    Parser.RecordType a -> renderRecordType a
+    Parser.Type_App a b  -> AppT <$> renderType a <*> renderType b
+    Parser.Type_Var n    -> Right $ VarT (mkName (T.unpack n))
+    Parser.Type_Con n    -> Right $ ConT (mkName (T.unpack n))
+    Parser.Type_Tuple a  -> Right $ TupleT a
+    Parser.Type_Arrow    -> Right $ ArrowT
+    Parser.Type_List     -> Right $ ListT
+    Parser.Type_Record a -> renderRecordType a
 
 
 

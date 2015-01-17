@@ -7,13 +7,13 @@ import qualified Data.Text as T
 
 
 data Type =
-  AppType Type Type |
-  VarType Text |
-  ConType Text |
-  TupleType Int |
-  ArrowType |
-  ListType |
-  RecordType RecordType
+  Type_App Type Type |
+  Type_Var Text |
+  Type_Con Text |
+  Type_Tuple Int |
+  Type_Arrow |
+  Type_List |
+  Type_Record RecordType
 
 type QualifiedName =
   [Text]
@@ -47,28 +47,28 @@ type' =
   appType <|> nonAppType
   where
     appType =
-      fmap (foldl1 AppType) $
+      fmap (foldl1 Type_App) $
       sepBy1 nonAppType (skipMany1 space)
     nonAppType =
       varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> 
-      arrowType <|> (RecordType <$> recordType) <|> inBraces type'
+      arrowType <|> (Type_Record <$> recordType) <|> inBraces type'
       where
         varType =
-          fmap VarType $ lowerCaseName
+          fmap Type_Var $ lowerCaseName
         conType =
-          fmap ConType $ upperCaseName
+          fmap Type_Con $ upperCaseName
         tupleConType =
-          fmap TupleType $ 
+          fmap Type_Tuple $ 
             char '(' *> (length <$> many1 (skipSpace *> char ',')) <* skipSpace <* char ')'
         tupleType =
-          fmap (\l -> foldl AppType (TupleType (length l)) l) $
+          fmap (\l -> foldl Type_App (Type_Tuple (length l)) l) $
             char '(' *> skipSpace *>
             sepBy1 type' (skipSpace *> char ',' <* skipSpace)
             <* skipSpace <* char ')'
         listConType =
-          ListType <$ string "[]"
+          Type_List <$ string "[]"
         arrowType =
-          ArrowType <$ string "->"
+          Type_Arrow <$ string "->"
 
 recordType :: Parser RecordType
 recordType =
