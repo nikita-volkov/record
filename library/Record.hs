@@ -18,7 +18,7 @@ record =
     (const $ fail "Declaration context is not supported")
   where
     type' =
-      fmap renderRecordType .
+      join . fmap (either fail return . renderRecordType) .
       either (fail . showString "Parser failure: ") return .
       Parser.run Parser.recordQQ . fromString
 
@@ -26,34 +26,47 @@ lens :: QuasiQuoter
 lens =
   undefined
 
-
-renderRecordType :: Parser.RecordType -> Type
+renderRecordType :: Parser.RecordType -> Either String Type
 renderRecordType l =
-  foldl 
-    (\a (n, v) -> AppT (AppT a (textLitT n)) (renderType v))
-    (ConT (recordTypeNameByArity (length l))) 
-    l
+  checkRepeatedLabels >> getRecordTypeName >>= constructType
   where
-    textLitT =
-      LitT . StrTyLit . T.unpack
+    checkRepeatedLabels =
+      maybe (return ()) (Left . showString "Repeated labels: " . show) $
+      mfilter (not . null) . Just $ 
+      map (fst . head) $
+      filter ((> 1) . length) $
+      groupWith fst l
+    getRecordTypeName =
+      maybe (Left (showString "Record arity " . shows arity . shows " is not supported" $ ""))
+            (Right) $
+      recordTypeNameByArity arity
+      where
+        arity = length l
+    constructType n =
+      foldl (\a (l, t) -> AppT <$> (AppT <$> a <*> pure (textLitT l)) <*> (renderType t))
+            (pure (ConT n))
+            (sortWith fst l)
+      where
+        textLitT =
+          LitT . StrTyLit . T.unpack
 
-recordTypeNameByArity :: Int -> Name
+recordTypeNameByArity :: Int -> Maybe Name
 recordTypeNameByArity =
   \case
-    1 -> ''Types.Record1
-    2 -> ''Types.Record2
-    3 -> ''Types.Record3
-    n -> error $ "Unsupported record arity " <> show n
+    1 -> Just ''Types.Record1
+    2 -> Just ''Types.Record2
+    3 -> Just ''Types.Record3
+    _ -> Nothing
 
-renderType :: Parser.Type -> Type
+renderType :: Parser.Type -> Either String Type
 renderType =
   \case
-    Parser.AppType a b -> AppT (renderType a) (renderType b)
-    Parser.VarType n -> VarT (mkName (T.unpack n))
-    Parser.ConType n -> ConT (mkName (T.unpack n))
-    Parser.TupleType a -> TupleT a
-    Parser.ArrowType -> ArrowT
-    Parser.ListType -> ListT
+    Parser.AppType a b  -> AppT <$> renderType a <*> renderType b
+    Parser.VarType n    -> Right $ VarT (mkName (T.unpack n))
+    Parser.ConType n    -> Right $ ConT (mkName (T.unpack n))
+    Parser.TupleType a  -> Right $ TupleT a
+    Parser.ArrowType    -> Right $ ArrowT
+    Parser.ListType     -> Right $ ListT
     Parser.RecordType a -> renderRecordType a
 
 
