@@ -120,7 +120,7 @@ renderExp =
 
 renderRecordExp :: Parser.RecordExp -> Either String Exp
 renderRecordExp l =
-  checkDuplicateLabels >> getRecordConName >>= constructExp
+  checkDuplicateLabels >> getConLambda >>= constructExp
   where
     checkDuplicateLabels =
       maybe (return ()) (Left . showString "Duplicate labels: " . show) $
@@ -128,16 +128,20 @@ renderRecordExp l =
       map (fst . head) $
       filter ((> 1) . length) $
       groupWith fst l
-    getRecordConName =
+    getConLambda =
       maybe (Left (showString "Record arity " . shows arity . shows " is not supported" $ ""))
             (Right) $
-      recordConNameByArity arity
+      conLambdaExp arity
       where
         arity = length l
-    constructExp n =
-      foldl (\a (l, e) -> AppE <$> a <*> renderExp e)
-            (pure (ConE n))
+    constructExp lam =
+      foldl (\a (n, e) -> AppE <$> (AppE <$> a <*> pure (proxy n)) <*> renderExp e)
+            (pure lam)
             (sortWith fst l)
+      where
+        proxy n =
+          SigE (ConE 'Proxy) 
+               (AppT (ConT ''Proxy) (LitT (StrTyLit (T.unpack n))))
 
 renderLit :: Parser.Lit -> Lit
 renderLit =
@@ -146,5 +150,50 @@ renderLit =
     Parser.Lit_String t -> StringL (T.unpack t)
     Parser.Lit_Integer i -> IntegerL i
     Parser.Lit_Rational r -> RationalL r
+
+-- |
+-- Allows to specify names in types signatures,
+-- leaving the value type resolution to the compiler.
+-- 
+-- E.g.,
+-- 
+-- >(\_ v1 _ v2 -> Record2 v1 v2) :: Proxy n1 -> v1 -> Proxy n2 -> v2 -> Record2 n1 v1 n2 v2
+-- 
+-- We can set the name signatures by passing
+-- proxies with explicit signatures to this lambda.
+conLambdaExp :: Int -> Maybe Exp
+conLambdaExp arity =
+  SigE <$> exp <*> t
+  where
+    exp =
+      LamE <$> pure pats <*> exp
+      where
+        pats =
+          concat $ flip map [1 .. arity] $ \i -> [WildP, VarP (mkName ("v" <> show i))]
+        exp =
+          foldl AppE <$> (ConE <$> recordConNameByArity arity) <*> 
+                         pure (map (\i -> VarE (mkName ("v" <> show i))) [1 .. arity])
+    t =
+      fnType <$> recordTypeNameByArity arity
+      where
+        fnType conName =
+          ForallT varBndrs [] $
+          foldr1 (\l r -> AppT (AppT ArrowT l) r)
+                 (argTypes <> pure (resultType conName))
+        varBndrs =
+          concat $ flip map [1 .. arity] $ \i ->
+            PlainTV (mkName ("n" <> show i)) :
+            PlainTV (mkName ("v" <> show i)) :
+            []
+        argTypes =
+          concat $ flip map [1 .. arity] $ \i -> 
+            AppT (ConT ''Proxy) (VarT (mkName ("n" <> show i))) :
+            VarT (mkName ("v" <> show i)) :
+            []
+        resultType conName =
+          foldl AppT (ConT conName) $ concat $ flip map [1 .. arity] $ \i ->
+            VarT (mkName ("n" <> show i)) :
+            VarT (mkName ("v" <> show i)) :
+            []
 
 
