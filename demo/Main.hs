@@ -9,4 +9,4 @@ main =
 
 
 type User = 
-  [record| (name :: String, birthday :: (year :: Int, month :: Int, day :: Int)) |]
+  [record| {name :: String, birthday :: {year :: Int, month :: Int, day :: Int}} |]

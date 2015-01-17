@@ -44,7 +44,7 @@ library
     Haskell2010
   other-modules:
   exposed-modules:
-    Record.Field
+    Record.Types
     Record.Parser
     Record.Lens
     Record

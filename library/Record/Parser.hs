@@ -24,7 +24,14 @@ type RecordType =
 
 run :: Parser a -> Text -> Either String a
 run p t =
-  parseOnly p t
+  onResult $ parse p t
+  where
+    onResult =
+      \case
+        Fail _ contexts message -> Left $ showString message . showString ". Contexts: " .
+                                          shows contexts $ "."
+        Done _ a -> Right a
+        Partial c -> onResult (c "")
 
 recordQQ :: Parser RecordType
 recordQQ =
@@ -32,7 +39,7 @@ recordQQ =
 
 type' :: Parser Type
 type' =
-  appType <|> nonAppType
+  appType <|> nonAppType <?> "type'"
   where
     appType =
       fmap (foldl1 AppType) $
@@ -60,7 +67,8 @@ type' =
 
 recordType :: Parser RecordType
 recordType =
-  char '(' *> skipSpace *> sepBy1' field (skipSpace *> char ',' <* skipSpace) <* skipSpace <* char ')'
+  char '{' *> skipSpace *> sepBy1' field (skipSpace *> char ',' <* skipSpace) <* skipSpace <* char '}'
+    <?> "recordType"
   where
     field =
       (,) <$> (name1 <* skipSpace <* string "::" <* skipSpace) <*> type'
