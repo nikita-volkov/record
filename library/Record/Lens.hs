@@ -12,7 +12,7 @@ type Lens s a =
 
 view :: Lens s a -> s -> a
 view l =
-  fst . l (\a -> (a, a))
+  getConst . l Const
 
 set :: Lens s a -> a -> s -> s
 set l a =
