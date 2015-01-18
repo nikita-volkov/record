@@ -167,7 +167,7 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldOwner $(pure (LitT (StrTyLit ("_" <> show arity))))
+          instance FieldOwner $(pure (LitT (StrTyLit ("_" <> show nIndex))))
                               $(varT selectedVVarName)
                               $(pure tupleType)
                               where
