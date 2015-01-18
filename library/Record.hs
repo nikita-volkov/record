@@ -98,25 +98,25 @@ renderType :: Parser.Type -> Either String Type
 renderType =
   \case
     Parser.Type_App a b  -> AppT <$> renderType a <*> renderType b
-    Parser.Type_Var n    -> Right $ VarT (mkName (T.unpack n))
-    Parser.Type_Con n    -> Right $ ConT (mkName (T.unpack n))
-    Parser.Type_Tuple a  -> Right $ TupleT a
-    Parser.Type_Arrow    -> Right $ ArrowT
-    Parser.Type_List     -> Right $ ListT
+    Parser.Type_Var n    -> return $ VarT (mkName (T.unpack n))
+    Parser.Type_Con n    -> return $ ConT (mkName (T.unpack n))
+    Parser.Type_Tuple a  -> return $ TupleT a
+    Parser.Type_Arrow    -> return $ ArrowT
+    Parser.Type_List     -> return $ ListT
     Parser.Type_Record a -> renderRecordType a
 
 renderExp :: Parser.Exp -> Either String Exp
 renderExp =
   \case
-    Parser.Exp_Record r -> renderRecordExp r
-    Parser.Exp_Var n -> return $ VarE (mkName (T.unpack n))
-    Parser.Exp_Con n -> return $ ConE (mkName (T.unpack n))
+    Parser.Exp_Record r   -> renderRecordExp r
+    Parser.Exp_Var n      -> return $ VarE (mkName (T.unpack n))
+    Parser.Exp_Con n      -> return $ ConE (mkName (T.unpack n))
     Parser.Exp_TupleCon a -> return $ ConE (tupleDataName a)
-    Parser.Exp_Nil -> return $ ConE ('[])
-    Parser.Exp_Lit l -> return $ LitE (renderLit l)
-    Parser.Exp_App a b -> AppE <$> renderExp a <*> renderExp b
-    Parser.Exp_List l -> ListE <$> traverse renderExp l
-    Parser.Exp_Sig e t -> SigE <$> renderExp e <*> renderType t
+    Parser.Exp_Nil        -> return $ ConE ('[])
+    Parser.Exp_Lit l      -> return $ LitE (renderLit l)
+    Parser.Exp_App a b    -> AppE <$> renderExp a <*> renderExp b
+    Parser.Exp_List l     -> ListE <$> traverse renderExp l
+    Parser.Exp_Sig e t    -> SigE <$> renderExp e <*> renderType t
 
 renderRecordExp :: Parser.RecordExp -> Either String Exp
 renderRecordExp l =
