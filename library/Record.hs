@@ -102,8 +102,8 @@ renderLens =
 renderSingleLens :: T.Text -> Exp
 renderSingleLens =
   AppE (VarE 'Types.lens) .
-  SigE (ConE 'Proxy) .
-  AppT (ConT ''Proxy) .
+  SigE (ConE 'Types.Field) .
+  AppT (ConT ''Types.Field) .
   LitT . StrTyLit . T.unpack
 
 renderRecordType :: Parser.RecordType -> Either String Type
@@ -204,8 +204,8 @@ renderRecordExp l =
             (sortWith fst l)
       where
         proxy n =
-          SigE (ConE 'Proxy) 
-               (AppT (ConT ''Proxy) (LitT (StrTyLit (T.unpack n))))
+          SigE (ConE 'Types.Field) 
+               (AppT (ConT ''Types.Field) (LitT (StrTyLit (T.unpack n))))
 
 renderLit :: Parser.Lit -> Lit
 renderLit =
@@ -221,7 +221,7 @@ renderLit =
 -- 
 -- E.g.,
 -- 
--- >(\_ v1 _ v2 -> Record2 v1 v2) :: Proxy n1 -> v1 -> Proxy n2 -> v2 -> Record2 n1 v1 n2 v2
+-- >(\_ v1 _ v2 -> Record2 v1 v2) :: Types.Field n1 -> v1 -> Types.Field n2 -> v2 -> Record2 n1 v1 n2 v2
 -- 
 -- We can set the name signatures by passing
 -- proxies with explicit signatures to this lambda.
@@ -251,7 +251,7 @@ conLambdaExp arity =
             []
         argTypes =
           concat $ flip map [1 .. arity] $ \i -> 
-            AppT (ConT ''Proxy) (VarT (mkName ("n" <> show i))) :
+            AppT (ConT ''Types.Field) (VarT (mkName ("n" <> show i))) :
             VarT (mkName ("v" <> show i)) :
             []
         resultType conName =

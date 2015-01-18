@@ -9,9 +9,8 @@
 -- by the quasiquoters exported in the root module.
 module Record.Types where
 
-import BasePrelude
+import BasePrelude hiding (Proxy)
 import Data.Functor.Identity
-import Data.Proxy
 import GHC.TypeLits
 import Record.Lens (Lens)
 import Language.Haskell.TH
@@ -26,22 +25,27 @@ import Language.Haskell.TH
 -- Here's how you can use it with tuples:
 -- 
 -- >trd :: FieldOwner "_3" v a => a -> v
--- >trd = getField (Proxy :: Proxy "_3")
+-- >trd = getField (Field :: Field "_3")
 -- 
 -- The function above will get you the third item of any tuple, which has it.
 class FieldOwner (n :: Symbol) v a | n a -> v where
-  setField :: Proxy n -> v -> a -> a
-  getField :: Proxy n -> a -> v
+  setField :: Field n -> v -> a -> a
+  getField :: Field n -> a -> v
 
 -- |
 -- Generate a lens using the 'FieldOwner' instance.
 -- 
 -- >someLens :: FieldOwner "age" v a => Lens a v
--- >someLens = lens (Proxy :: Proxy "name") 
-lens :: FieldOwner n v a => Proxy n -> Lens a v
+-- >someLens = lens (Field :: Field "name") 
+lens :: FieldOwner n v a => Field n -> Lens a v
 lens n =
   \f a -> fmap (\v -> setField n v a) (f (getField n a))
 
+-- |
+-- A specialised version of "Data.Proxy.Proxy".
+-- Defined for compatibility with \"base-4.6\", 
+-- since @Proxy@ was only defined in \"base-4.7\".
+data Field (t :: Symbol) = Field
 
 -- * Record Types
 -------------------------
