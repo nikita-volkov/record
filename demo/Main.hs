@@ -1,3 +1,4 @@
+{-# LANGUAGE NoImplicitPrelude, QuasiQuotes #-}
 module Main where
 
 import BasePrelude
