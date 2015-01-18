@@ -5,6 +5,15 @@ version:
 synopsis:
   First class records implemented with quasi-quotation
 description:
+  An API of just two quasi-quoters, 
+  providing a full-scale solution to the notorious records problem of Haskell.
+  .
+  Links:
+  .
+  * <http://nikita-volkov.github.io/record A comprehensive introduction to the library>.
+  .
+  * <https://github.com/nikita-volkov/record/blob/master/demo/Main.hs Demo>.
+  .
 category:
   Control, Data Structures
 homepage:
