@@ -207,7 +207,7 @@ lit :: Parser Lit
 lit =
   Lit_Char <$> charLit <|>
   Lit_String <$> stringLit <|>
-  Lit_Integer <$> decimal <|>
-  Lit_Rational <$> rational
+  Lit_Rational <$> rational <|>
+  Lit_Integer <$> decimal
 
 
