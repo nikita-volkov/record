@@ -18,10 +18,10 @@ import Language.Haskell.TH
 
 
 -- |
--- Defines a way to access some value of a type as field,
+-- Defines a way to access some value of a type as a field,
 -- using the string type literal functionality.
 -- 
--- Instances are provided to all records and to tuples of arity of up to 24.
+-- Instances are provided for all records and for tuples of arity of up to 24.
 -- 
 -- Here's how you can use it with tuples:
 -- 

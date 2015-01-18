@@ -11,7 +11,7 @@ import Data.Functor.Identity
 
 
 -- |
--- A reference to from a datastructure @s@ to some part @a@,
+-- A reference from a datastructure @s@ to some part @a@,
 -- which can be used to manipulate that particular part.
 type Lens s a = 
   forall f. Functor f => (a -> f a) -> (s -> f s)
