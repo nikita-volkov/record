@@ -24,8 +24,8 @@ import Language.Haskell.TH
 -- 
 -- Here's how you can use it with tuples:
 -- 
--- >trd :: FieldOwner "_3" v a => a -> v
--- >trd = getField (Field :: Field "_3")
+-- >trd :: FieldOwner "3" v a => a -> v
+-- >trd = getField (Field :: Field "3")
 -- 
 -- The function above will get you the third item of any tuple, which has it.
 class FieldOwner (n :: Symbol) v a | n a -> v where
@@ -122,7 +122,7 @@ return $ do
         |]
 
         
-instance FieldOwner "_1" v1 (Identity v1) where
+instance FieldOwner "1" v1 (Identity v1) where
   setField _ v _ = Identity v
   getField _ = runIdentity
 
@@ -167,7 +167,7 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldOwner $(pure (LitT (StrTyLit ("_" <> show nIndex))))
+          instance FieldOwner $(pure (LitT (StrTyLit (show nIndex))))
                               $(varT selectedVVarName)
                               $(pure tupleType)
                               where

@@ -134,7 +134,7 @@ type Lens =
 lens :: Parser Lens
 lens =
   labeled "lens" $
-    sepBy1 lowerCaseName (char '.')
+    sepBy1 (lowerCaseName <|> takeWhile1 isDigit) (char '.')
 
 
 data Exp =

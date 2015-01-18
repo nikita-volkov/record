@@ -78,6 +78,11 @@ record =
 -- >setPersonBirthdayYear =
 -- >  Record.Lens.set [lens|birthday.year|]
 -- 
+-- You can also use this function to manipulate tuples of arity up to 24:
+-- 
+-- >mapThirdElement :: (Char -> Char) -> (Int, String, Char) -> (Int, String, Char)
+-- >mapThirdElement =
+-- >  Record.Lens.over [lens|3|]
 lens :: QuasiQuoter
 lens =
   QuasiQuoter

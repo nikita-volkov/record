@@ -35,6 +35,14 @@ personBirthdayYearLens' :: Lens Person Int
 personBirthdayYearLens' =
   [lens|birthday|] . [lens|year|]
 
+tupleLens :: Lens (Int, Char, String) String
+tupleLens =
+  [lens|3|]
+
+mapThirdElement :: (Char -> Char) -> (Int, String, Char) -> (Int, String, Char)
+mapThirdElement =
+  over [lens|3|]
+
 functionOnARecord :: [record| {name :: String, age :: Int}|] -> Int
 functionOnARecord =
   view [lens|age|]
