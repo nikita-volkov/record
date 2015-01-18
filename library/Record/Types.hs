@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- |
 -- The contents of this module may seem a bit overwhelming. 
 -- Don't worry,
@@ -67,7 +68,11 @@ return $ flip map [1 .. 24] $ \arity ->
         i <- [1 .. arity]
         return $ (,) (NotStrict) (VarT (mkName ("v" <> show i)))
     derivingNames =
+#if MIN_VERSION_base(4,7,0)
       [''Show, ''Eq, ''Ord, ''Typeable, ''Generic]
+#else
+      [''Show, ''Eq, ''Ord, ''Generic]
+#endif
     in
       DataD [] typeName varBndrs [NormalC typeName conTypes] derivingNames
 
