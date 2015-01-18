@@ -178,6 +178,7 @@ exp =
           nil <|>
           Exp_Lit <$> lit <|>
           tuple <|>
+          list <|>
           inBraces exp
           where
             record =
@@ -202,6 +203,11 @@ exp =
                 char '(' *> skipSpace *>
                 sepBy1 exp (skipSpace *> char ',' <* skipSpace)
                 <* skipSpace <* char ')'
+            list =
+              fmap Exp_List $
+                char '[' *> skipSpace *> 
+                  sepBy1 exp (skipSpace *> char ',' <* skipSpace) <*
+                  skipSpace <* char ']'
 
 lit :: Parser Lit
 lit =
