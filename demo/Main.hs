@@ -35,3 +35,6 @@ personBirthdayYearLens' :: Lens Person Int
 personBirthdayYearLens' =
   [lens|birthday|] . [lens|year|]
 
+functionOnARecord :: [record| {name :: String, age :: Int}|] -> Int
+functionOnARecord =
+  view [lens|age|]

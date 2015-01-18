@@ -1,3 +1,12 @@
+-- |
+-- The contents of this module may seem a bit overwhelming. 
+-- Don't worry,
+-- all it does is just cover instances and datatypes of records and tuples of
+-- huge arities.
+-- 
+-- You don't actually need to ever use this module,
+-- since all the functionality you may need is presented 
+-- by the quasiquoters exported in the root module.
 module Record.Types where
 
 import BasePrelude
@@ -8,14 +17,34 @@ import Record.Lens (Lens)
 import Language.Haskell.TH
 
 
+-- |
+-- Defines a way to access some value of a type as field,
+-- using the string type literal functionality.
+-- 
+-- Instances are provided to all records and to tuples of arity of up to 24.
+-- 
+-- Here's how you can use it with tuples:
+-- 
+-- >trd :: FieldOwner "_3" v a => a -> v
+-- >trd = getField (Proxy :: Proxy "_3")
+-- 
+-- The function above will get you the third item of any tuple, which has it.
 class FieldOwner (n :: Symbol) v a | n a -> v where
   setField :: Proxy n -> v -> a -> a
   getField :: Proxy n -> a -> v
 
+-- |
+-- Generate a lens using the 'FieldOwner' instance.
+-- 
+-- >someLens :: FieldOwner "age" v a => Lens a v
+-- >someLens = lens (Proxy :: Proxy "name") 
 lens :: FieldOwner n v a => Proxy n -> Lens a v
 lens n =
   \f a -> fmap (\v -> setField n v a) (f (getField n a))
 
+
+-- * Record Types
+-------------------------
 
 -- Generate Record types
 return $ flip map [1 .. 24] $ \arity ->

@@ -1,6 +1,9 @@
 -- |
--- A minimal subset of the "lens" functionality,
+-- A minimal subset of the "lens" library functionality,
 -- which is completely compatible with it.
+-- 
+-- Unless you use the "lens" library itself, 
+-- this module is your interface to manipulating record fields.
 module Record.Lens where
 
 import BasePrelude

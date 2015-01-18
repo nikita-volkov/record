@@ -1,4 +1,12 @@
-module Record where
+module Record
+(
+  record,
+  lens,
+  -- ** Shorthands
+  r,
+  l,
+)
+where
 
 import BasePrelude
 import Language.Haskell.TH
@@ -9,6 +17,34 @@ import qualified Record.Parser as Parser
 import qualified Data.Text as T
 
 
+-- | A shorthand alias to 'record'.
+r :: QuasiQuoter
+r = record
+
+-- | A shorthand alias to 'lens'.
+l :: QuasiQuoter
+l = lens
+
+-- |
+-- A quasiquoter, which generates record expressions and types,
+-- depending on the context it's used in.
+-- 
+-- Here is how you can use it to declare types:
+-- 
+-- >type Person = 
+-- >  [record| {name :: String, birthday :: {year :: Int, month :: Int, day :: Int}} |]
+-- 
+-- To declare functions:
+-- 
+-- >getAge :: [record| {name :: String, age :: Int} |] -> Int
+-- 
+-- To declare values:
+-- 
+-- >person :: Person
+-- >person =
+-- >  [record| {name = "Grigori Yakovlevich Perelman", 
+-- >            birthday = {year = 1966, month = 6, day = 13}} |]
+-- 
 record :: QuasiQuoter
 record =
   QuasiQuoter
@@ -26,6 +62,22 @@ record =
       either (fail . showString "Parser failure: ") return .
       Parser.run (Parser.qq Parser.type') . fromString
 
+-- |
+-- A quasiquoter, which generates a 'Lens.Lens'.
+-- Lens is your interface to accessing and modifying the fields of a record.
+-- 
+-- Here is how you can use it:
+-- 
+-- >getPersonBirthdayYear :: Person -> Int
+-- >getPersonBirthdayYear =
+-- >  Record.Lens.view ([lens|birthday|] . [lens|year|])
+-- 
+-- For your convenience you can compose lenses from inside of the quotation:
+-- 
+-- >setPersonBirthdayYear :: Int -> Person -> Person
+-- >setPersonBirthdayYear =
+-- >  Record.Lens.set [lens|birthday.year|]
+-- 
 lens :: QuasiQuoter
 lens =
   QuasiQuoter
