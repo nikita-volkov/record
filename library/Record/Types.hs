@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP, UndecidableInstances #-}
 -- |
 -- The contents of this module may seem a bit overwhelming. 
 -- Don't worry,
