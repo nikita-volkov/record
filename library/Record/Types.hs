@@ -35,8 +35,8 @@ class FieldOwner (n :: Symbol) v a | n a -> v where
 -- |
 -- Generate a lens using the 'FieldOwner' instance.
 -- 
--- >someLens :: FieldOwner "age" v a => Lens a v
--- >someLens = lens (Field :: Field "name") 
+-- >ageLens :: FieldOwner "age" v a => Lens a v
+-- >ageLens = lens (Field :: Field "age") 
 lens :: FieldOwner n v a => Field n -> Lens a v
 lens n =
   \f a -> fmap (\v -> setField n v a) (f (getField n a))
