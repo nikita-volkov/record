@@ -27,7 +27,7 @@ install:
     if [ $lower_bound_dependencies = "1" ];
     then
       constraint_options=(
-        "--constraint=transformers==0.2.*"
+        "--constraint=transformers==0.3.*"
       );
     fi;
   # Install the library dependencies
