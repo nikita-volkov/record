@@ -1,7 +1,7 @@
 name:
   record
 version:
-  0.1.0
+  0.1.1
 synopsis:
   First class records implemented with quasi-quotation
 description:
@@ -34,6 +34,8 @@ build-type:
   Simple
 cabal-version:
   >=1.10
+extra-source-files:
+  CHANGELOG.md
 
 
 source-repository head

@@ -50,7 +50,7 @@ type' =
       fmap (foldl1 Type_App) $
       sepBy1 nonAppType (skipMany1 space)
     nonAppType =
-      varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> 
+      varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> listType <|>
       arrowType <|> (Type_Record <$> recordType) <|> inBraces type'
       where
         varType =
@@ -65,6 +65,9 @@ type' =
             char '(' *> skipSpace *>
             sepBy1 type' (skipSpace *> char ',' <* skipSpace)
             <* skipSpace <* char ')'
+        listType =
+          fmap (Type_App Type_List) $
+            char '[' *> skipSpace *> type' <* skipSpace <* char ']'
         listConType =
           Type_List <$ string "[]"
         arrowType =

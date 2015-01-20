@@ -44,6 +44,6 @@ mapThirdElement :: (Char -> Char) -> (Int, String, Char) -> (Int, String, Char)
 mapThirdElement =
   over [lens|3|]
 
-functionOnARecord :: [record| {name :: String, age :: Int}|] -> Int
+functionOnARecord :: [record| {name :: String, age :: [Int]}|] -> [Int]
 functionOnARecord =
   view [lens|age|]
