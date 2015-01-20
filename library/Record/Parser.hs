@@ -33,6 +33,16 @@ run p t =
         Done _ a -> Right a
         Partial c -> onResult (c "")
 
+-- |
+-- Run a parser on a given input,
+-- lifting its errors to the context parser.
+-- 
+-- Consider it a subparser.
+parser :: Parser a -> Text -> Parser a
+parser p t =
+  either fail return $
+  run p t
+
 labeled :: String -> Parser a -> Parser a
 labeled =
   flip (<?>)
@@ -159,6 +169,7 @@ data Lit =
   Lit_String Text |
   Lit_Integer Integer |
   Lit_Rational Rational
+  deriving (Show)
 
 exp :: Parser Exp
 exp =
@@ -212,11 +223,27 @@ exp =
                   sepBy1 exp (skipSpace *> char ',' <* skipSpace) <*
                   skipSpace <* char ']'
 
+-- |
+-- 
+-- Integers get parsed as integers:
+-- >>> run lit "2"
+-- Right (Lit_Integer 2)
+-- 
+-- Rationals get parsed as rationals:
+-- >>> run lit "2.0"
+-- Right (Lit_Rational (2 % 1))
+-- >>> run lit "3e2"
+-- Right (Lit_Rational (300 % 1))
 lit :: Parser Lit
 lit =
   Lit_Char <$> charLit <|>
   Lit_String <$> stringLit <|>
-  Lit_Rational <$> rational <|>
+  Lit_Rational <$> rationalNotDecimal <|>
   Lit_Integer <$> decimal
-
+  where
+    rationalNotDecimal =
+      match rational >>= \(t, r) ->
+        case run (decimal <* endOfInput) t of
+          Left _ -> return r
+          _ -> mzero
 
