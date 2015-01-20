@@ -226,12 +226,15 @@ exp =
 -- |
 -- 
 -- Integers get parsed as integers:
+-- 
 -- >>> run lit "2"
 -- Right (Lit_Integer 2)
 -- 
 -- Rationals get parsed as rationals:
+-- 
 -- >>> run lit "2.0"
 -- Right (Lit_Rational (2 % 1))
+-- 
 -- >>> run lit "3e2"
 -- Right (Lit_Rational (300 % 1))
 lit :: Parser Lit
