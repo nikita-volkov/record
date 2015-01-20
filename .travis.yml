@@ -1,8 +1,9 @@
 env:
-  - ghc=7.6.1  cabal=1.18 build_benchmarks=1
-  - ghc=7.8.1  cabal=1.18 build_benchmarks=1
-  - ghc=7.10.1 cabal=1.22 build_benchmarks=1
-  - ghc=7.8.1  cabal=1.18 build_benchmarks=1 lower_bound_dependencies=1
+  - ghc=7.6.1  cabal=1.18 benchmarks=1 tests=1
+  - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1
+  - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1 lower_bound_dependencies=1
+  - ghc=7.10.1 cabal=1.22 benchmarks=1
+
 
 install:
   # Set up the Shell to treat the semicolon as &&
@@ -33,18 +34,19 @@ install:
   # Install the library dependencies
   - cabal install --only-dependencies --reorder-goals
       ${constraint_options[@]}
-      --enable-tests
-      $([ "$build_benchmarks" = "1" ] && echo "--enable-benchmarks")
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
   # Install the "haskell-src-exts" implicit dependency
   - cabal install happy
   # Build the library
   - cabal build
   # Configure and build the remaining stuff
   - cabal configure 
-      --enable-tests 
-      $([ "$build_benchmarks" = "1" ] && echo "--enable-benchmarks")
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
   - cabal build
 
 
 script:
-  - cabal test --show-details=always
+  - | 
+    [ "$tests" = "1" ] && cabal test --show-details=always
