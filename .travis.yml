@@ -3,9 +3,10 @@ env:
   - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1
   - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1 lower_bound_dependencies=1
   - ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
-
-allow_failures:
-  - ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
+  
+matrix:
+  allow_failures:
+    - env: ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
 
 install:
   # Set up the Shell to treat the semicolon as &&
