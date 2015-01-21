@@ -1,3 +1,6 @@
+# 0.1.3
+* Parsing of unit values and types
+
 # 0.1.2
 * Fix Integers getting parsed as Rationals (#2)
 

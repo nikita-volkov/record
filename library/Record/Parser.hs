@@ -14,6 +14,7 @@ data Type =
   Type_Arrow |
   Type_List |
   Type_Record RecordType
+  deriving (Show)
 
 type QualifiedName =
   [Text]
@@ -51,6 +52,9 @@ qq :: Parser a -> Parser a
 qq p =
   skipSpace *> p <* skipSpace <* endOfInput
 
+-- |
+-- >>> run type' "()"
+-- Right (Type_Tuple 0)
 type' :: Parser Type
 type' =
   labeled "type'" $
@@ -69,7 +73,7 @@ type' =
           fmap Type_Con $ upperCaseName
         tupleConType =
           fmap Type_Tuple $ 
-            char '(' *> (length <$> many1 (skipSpace *> char ',')) <* skipSpace <* char ')'
+            char '(' *> (length <$> many (skipSpace *> char ',')) <* skipSpace <* char ')'
         tupleType =
           fmap (\l -> foldl Type_App (Type_Tuple (length l)) l) $
             char '(' *> skipSpace *>
@@ -160,6 +164,7 @@ data Exp =
   Exp_App Exp Exp |
   Exp_List [Exp] |
   Exp_Sig Exp Type
+  deriving (Show)
 
 type RecordExp =
   [(Text, Exp)]
@@ -171,6 +176,10 @@ data Lit =
   Lit_Rational Rational
   deriving (Show)
 
+-- |
+-- 
+-- >>> run exp "()"
+-- Right (Exp_TupleCon 0)
 exp :: Parser Exp
 exp =
   labeled "exp" $
@@ -209,7 +218,7 @@ exp =
               Exp_Con <$> (upperCaseName <|> symbolicIdent)
             tupleCon =
               Exp_TupleCon . length <$> 
-              (char '(' *> many1 (char ',') <* char ')')
+              (char '(' *> many (char ',') <* char ')')
             nil =
               Exp_Nil <$ string "[]"
             tuple =
