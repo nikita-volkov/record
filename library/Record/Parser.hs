@@ -53,6 +53,15 @@ qq p =
   skipSpace *> p <* skipSpace <* endOfInput
 
 -- |
+-- >>> run type' "(Int, Char)"
+-- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Char"))
+-- 
+-- >>> run type' "(,) Int Int"
+-- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Int"))
+-- 
+-- >>> run type' "(,)"
+-- Right (Type_Tuple 2)
+-- 
 -- >>> run type' "()"
 -- Right (Type_Tuple 0)
 type' :: Parser Type
@@ -72,13 +81,17 @@ type' =
         conType =
           fmap Type_Con $ upperCaseName
         tupleConType =
-          fmap Type_Tuple $ 
-            char '(' *> (length <$> many (skipSpace *> char ',')) <* skipSpace <* char ')'
+          Type_Tuple 0 <$ string "()" <|>
+          Type_Tuple . succ . length <$> (char '(' *> many (char ',') <* char ')')
         tupleType =
-          fmap (\l -> foldl Type_App (Type_Tuple (length l)) l) $
-            char '(' *> skipSpace *>
-            sepBy1 type' (skipSpace *> char ',' <* skipSpace)
-            <* skipSpace <* char ')'
+          do
+            char '('
+            skipSpace
+            h <- type' <* skipSpace <* char ',' <* skipSpace
+            t <- sepBy1 type' (skipSpace *> char ',' <* skipSpace)
+            skipSpace
+            char ')'
+            return $ foldl Type_App (Type_Tuple (1 + length t)) $ h : t
         listType =
           fmap (Type_App Type_List) $
             char '[' *> skipSpace *> type' <* skipSpace <* char ']'
@@ -178,6 +191,15 @@ data Lit =
 
 -- |
 -- 
+-- >>> run exp "(,)"
+-- Right (Exp_TupleCon 2)
+-- 
+-- >>> run exp "(1,2)"
+-- Right (Exp_App (Exp_App (Exp_TupleCon 2) (Exp_Lit (Lit_Integer 1))) (Exp_Lit (Lit_Integer 2)))
+-- 
+-- >>> run exp "(1)"
+-- Right (Exp_Lit (Lit_Integer 1))
+-- 
 -- >>> run exp "()"
 -- Right (Exp_TupleCon 0)
 exp :: Parser Exp
@@ -217,15 +239,19 @@ exp =
             con =
               Exp_Con <$> (upperCaseName <|> symbolicIdent)
             tupleCon =
-              Exp_TupleCon . length <$> 
-              (char '(' *> many (char ',') <* char ')')
+              Exp_TupleCon 0 <$ string "()" <|>
+              Exp_TupleCon . succ . length <$> (char '(' *> many (char ',') <* char ')')
             nil =
               Exp_Nil <$ string "[]"
             tuple =
-              fmap (\l -> foldl Exp_App (Exp_TupleCon (length l)) l) $
-                char '(' *> skipSpace *>
-                sepBy1 exp (skipSpace *> char ',' <* skipSpace)
-                <* skipSpace <* char ')'
+              do
+                char '('
+                skipSpace
+                h <- exp <* skipSpace <* char ',' <* skipSpace
+                t <- sepBy1 exp (skipSpace *> char ',' <* skipSpace)
+                skipSpace
+                char ')'
+                return $ foldl Exp_App (Exp_TupleCon (1 + length t)) $ h : t
             list =
               fmap Exp_List $
                 char '[' *> skipSpace *> 

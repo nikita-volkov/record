@@ -1,3 +1,6 @@
+# 0.1.4
+* Fix tuples parsing
+
 # 0.1.3
 * Parsing of unit values and types
 
