@@ -1,3 +1,6 @@
+# 0.1.5
+* Fix the range of supported "attoparsec" versions (#6)
+
 # 0.1.4
 * Fix tuples parsing
 
