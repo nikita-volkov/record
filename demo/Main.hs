@@ -28,19 +28,19 @@ setPersonBirthdayYear :: Int -> Person -> Person
 setPersonBirthdayYear =
   set [lens|birthday.year|]
 
-personBirthdayYearLens :: Lens Person Int
+personBirthdayYearLens :: Lens Person Person Int Int
 personBirthdayYearLens =
   [lens|birthday.year|]
 
-personBirthdayYearLens' :: Lens Person Int
+personBirthdayYearLens' :: Lens Person Person Int Int
 personBirthdayYearLens' =
   [lens|birthday|] . [lens|year|]
 
-tupleLens :: Lens (Int, Char, String) String
+tupleLens :: Lens (Int, Char, String) (Int, Char, a) String a
 tupleLens =
   [lens|3|]
 
-mapThirdElement :: (Char -> Char) -> (Int, String, Char) -> (Int, String, Char)
+mapThirdElement :: (Char -> b) -> (Int, String, Char) -> (Int, String, b)
 mapThirdElement =
   over [lens|3|]
 
