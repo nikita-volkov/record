@@ -1,3 +1,7 @@
+# 0.2.0
+* Type-changing updates
+* Reimplemented the `Record.Types` API
+
 # 0.1.5
 * Fix the range of supported "attoparsec" versions (#6)
 
