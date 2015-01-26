@@ -14,6 +14,7 @@ data Type =
   Type_Arrow |
   Type_List |
   Type_Record RecordType
+  deriving (Show)
 
 type QualifiedName =
   [Text]
@@ -33,6 +34,16 @@ run p t =
         Done _ a -> Right a
         Partial c -> onResult (c "")
 
+-- |
+-- Run a parser on a given input,
+-- lifting its errors to the context parser.
+-- 
+-- Consider it a subparser.
+parser :: Parser a -> Text -> Parser a
+parser p t =
+  either fail return $
+  run p t
+
 labeled :: String -> Parser a -> Parser a
 labeled =
   flip (<?>)
@@ -41,6 +52,18 @@ qq :: Parser a -> Parser a
 qq p =
   skipSpace *> p <* skipSpace <* endOfInput
 
+-- |
+-- >>> run type' "(Int, Char)"
+-- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Char"))
+-- 
+-- >>> run type' "(,) Int Int"
+-- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Int"))
+-- 
+-- >>> run type' "(,)"
+-- Right (Type_Tuple 2)
+-- 
+-- >>> run type' "()"
+-- Right (Type_Tuple 0)
 type' :: Parser Type
 type' =
   labeled "type'" $
@@ -50,7 +73,7 @@ type' =
       fmap (foldl1 Type_App) $
       sepBy1 nonAppType (skipMany1 space)
     nonAppType =
-      varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> 
+      varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> listType <|>
       arrowType <|> (Type_Record <$> recordType) <|> inBraces type'
       where
         varType =
@@ -58,13 +81,20 @@ type' =
         conType =
           fmap Type_Con $ upperCaseName
         tupleConType =
-          fmap Type_Tuple $ 
-            char '(' *> (length <$> many1 (skipSpace *> char ',')) <* skipSpace <* char ')'
+          Type_Tuple 0 <$ string "()" <|>
+          Type_Tuple . succ . length <$> (char '(' *> many (char ',') <* char ')')
         tupleType =
-          fmap (\l -> foldl Type_App (Type_Tuple (length l)) l) $
-            char '(' *> skipSpace *>
-            sepBy1 type' (skipSpace *> char ',' <* skipSpace)
-            <* skipSpace <* char ')'
+          do
+            char '('
+            skipSpace
+            h <- type' <* skipSpace <* char ',' <* skipSpace
+            t <- sepBy1 type' (skipSpace *> char ',' <* skipSpace)
+            skipSpace
+            char ')'
+            return $ foldl Type_App (Type_Tuple (1 + length t)) $ h : t
+        listType =
+          fmap (Type_App Type_List) $
+            char '[' *> skipSpace *> type' <* skipSpace <* char ']'
         listConType =
           Type_List <$ string "[]"
         arrowType =
@@ -147,6 +177,7 @@ data Exp =
   Exp_App Exp Exp |
   Exp_List [Exp] |
   Exp_Sig Exp Type
+  deriving (Show)
 
 type RecordExp =
   [(Text, Exp)]
@@ -156,7 +187,21 @@ data Lit =
   Lit_String Text |
   Lit_Integer Integer |
   Lit_Rational Rational
+  deriving (Show)
 
+-- |
+-- 
+-- >>> run exp "(,)"
+-- Right (Exp_TupleCon 2)
+-- 
+-- >>> run exp "(1,2)"
+-- Right (Exp_App (Exp_App (Exp_TupleCon 2) (Exp_Lit (Lit_Integer 1))) (Exp_Lit (Lit_Integer 2)))
+-- 
+-- >>> run exp "(1)"
+-- Right (Exp_Lit (Lit_Integer 1))
+-- 
+-- >>> run exp "()"
+-- Right (Exp_TupleCon 0)
 exp :: Parser Exp
 exp =
   labeled "exp" $
@@ -194,26 +239,49 @@ exp =
             con =
               Exp_Con <$> (upperCaseName <|> symbolicIdent)
             tupleCon =
-              Exp_TupleCon . length <$> 
-              (char '(' *> many1 (char ',') <* char ')')
+              Exp_TupleCon 0 <$ string "()" <|>
+              Exp_TupleCon . succ . length <$> (char '(' *> many (char ',') <* char ')')
             nil =
               Exp_Nil <$ string "[]"
             tuple =
-              fmap (\l -> foldl Exp_App (Exp_TupleCon (length l)) l) $
-                char '(' *> skipSpace *>
-                sepBy1 exp (skipSpace *> char ',' <* skipSpace)
-                <* skipSpace <* char ')'
+              do
+                char '('
+                skipSpace
+                h <- exp <* skipSpace <* char ',' <* skipSpace
+                t <- sepBy1 exp (skipSpace *> char ',' <* skipSpace)
+                skipSpace
+                char ')'
+                return $ foldl Exp_App (Exp_TupleCon (1 + length t)) $ h : t
             list =
               fmap Exp_List $
                 char '[' *> skipSpace *> 
                   sepBy1 exp (skipSpace *> char ',' <* skipSpace) <*
                   skipSpace <* char ']'
 
+-- |
+-- 
+-- Integers get parsed as integers:
+-- 
+-- >>> run lit "2"
+-- Right (Lit_Integer 2)
+-- 
+-- Rationals get parsed as rationals:
+-- 
+-- >>> run lit "2.0"
+-- Right (Lit_Rational (2 % 1))
+-- 
+-- >>> run lit "3e2"
+-- Right (Lit_Rational (300 % 1))
 lit :: Parser Lit
 lit =
   Lit_Char <$> charLit <|>
   Lit_String <$> stringLit <|>
-  Lit_Rational <$> rational <|>
+  Lit_Rational <$> rationalNotDecimal <|>
   Lit_Integer <$> decimal
-
+  where
+    rationalNotDecimal =
+      match rational >>= \(t, r) ->
+        case run (decimal <* endOfInput) t of
+          Left _ -> return r
+          _ -> mzero
 

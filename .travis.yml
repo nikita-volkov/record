@@ -1,8 +1,12 @@
 env:
-  - ghc=7.6.1 build_benchmarks=1
-  - ghc=7.8.1 build_benchmarks=1
-  - ghc=7.10.1 build_benchmarks=1
-  - ghc=7.8.1 build_benchmarks=1 lower_bound_dependencies=1
+  - ghc=7.6.1  cabal=1.18 benchmarks=1 tests=1
+  - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1
+  - ghc=7.8.1  cabal=1.18 benchmarks=1 tests=1 lower_bound_dependencies=1
+  - ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
+  
+matrix:
+  allow_failures:
+    - env: ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
 
 install:
   # Set up the Shell to treat the semicolon as &&
@@ -11,8 +15,8 @@ install:
   - 
     travis_retry sudo add-apt-repository -y ppa:hvr/ghc;
     travis_retry sudo apt-get update;
-    travis_retry sudo apt-get install cabal-install-1.22 ghc-$ghc;
-    export PATH=/opt/ghc/$ghc/bin:/opt/cabal/1.22/bin:$PATH;
+    travis_retry sudo apt-get install cabal-install-$cabal ghc-$ghc;
+    export PATH=/opt/ghc/$ghc/bin:/opt/cabal/$cabal/bin:$PATH;
   # Update the Cabal database
   - cabal update
   # Switch to the distro:
@@ -27,24 +31,26 @@ install:
     if [ $lower_bound_dependencies = "1" ];
     then
       constraint_options=(
-        "--constraint=transformers==0.2.*"
+        "--constraint=transformers==0.3.*"
       );
     fi;
   # Install the library dependencies
   - cabal install --only-dependencies --reorder-goals
       ${constraint_options[@]}
-      --enable-tests
-      $([ "$build_benchmarks" = "1" ] && echo "--enable-benchmarks")
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
   # Install the "haskell-src-exts" implicit dependency
   - cabal install happy
   # Build the library
   - cabal build
   # Configure and build the remaining stuff
   - cabal configure 
-      --enable-tests 
-      $([ "$build_benchmarks" = "1" ] && echo "--enable-benchmarks")
+      $([ "$tests" = "1" ] && echo "--enable-tests")
+      $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
+      -f-doctest
+      -f-demo
   - cabal build
 
-
 script:
-  - cabal test --show-details=always
+  - | 
+    [ "$tests" = "1" ] && cabal test --show-details=always
