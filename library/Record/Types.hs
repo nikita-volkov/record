@@ -29,14 +29,14 @@ import Language.Haskell.TH
 -- 
 -- Here's how you can use it with tuples:
 -- 
--- >trd :: FieldOwner "3" v v' a' a => a -> v
+-- >trd :: FieldLens "3" v v' a' a => a -> v
 -- >trd = view . fieldLens (Field :: Field "3")
 -- The function above will get you the third item of any tuple, which has it.
-class FieldOwner (n :: Symbol) v v' a' a | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
+class FieldLens (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
   -- |
   -- A polymorphic lens. E.g.:
   -- 
-  -- >ageLens :: FieldOwner "age" v v' a' a => Lens a a' v v'
+  -- >ageLens :: FieldLens "age" v v' a' a => Lens a a' v v'
   -- >ageLens = fieldLens (Field :: Field "age") 
   fieldLens :: Field n -> Lens a a' v v'
 
@@ -127,22 +127,22 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldOwner $(varT selectedNVarName)
+          instance FieldLens $(varT selectedNVarName)
+                              $(pure recordType)
+                              $(pure record'Type)
                               $(varT selectedVVarName)
                               $(varT selectedV'VarName)
-                              $(pure record'Type)
-                              $(pure recordType)
                               where
             {-# INLINE fieldLens #-}
             fieldLens = const $(pure fieldLensLambda)
         |]
 
         
-instance FieldOwner "1" v1 v1' (Identity v1') (Identity v1) where
+instance FieldLens "1" (Identity v1) (Identity v1') v1 v1' where
   fieldLens = const $ \f -> fmap Identity . f . runIdentity
 
 
--- Generate FieldOwner instances for tuples
+-- Generate FieldLens instances for tuples
 return $ do
   arity <- [2 .. 24]
   nIndex <- [1 .. arity]
@@ -188,11 +188,11 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldOwner $(pure (LitT (StrTyLit (show nIndex))))
+          instance FieldLens $(pure (LitT (StrTyLit (show nIndex))))
+                              $(pure tupleType)
+                              $(pure tuple'Type)
                               $(varT selectedVVarName)
                               $(varT selectedV'VarName)
-                              $(pure tuple'Type)
-                              $(pure tupleType)
                               where
             {-# INLINE fieldLens #-}
             fieldLens = const $(pure fieldLensLambda)
