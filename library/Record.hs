@@ -106,7 +106,7 @@ renderLens =
 
 renderSingleLens :: T.Text -> Exp
 renderSingleLens =
-  AppE (VarE 'Types.lens) .
+  AppE (VarE 'Types.fieldLens) .
   SigE (ConE 'Types.Field) .
   AppT (ConT ''Types.Field) .
   LitT . StrTyLit . T.unpack

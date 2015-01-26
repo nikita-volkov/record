@@ -127,4 +127,5 @@ executable demo
   else
     build-depends:
       record,
-      base-prelude
+      base-prelude,
+      base
