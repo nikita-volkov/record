@@ -29,23 +29,23 @@ import Language.Haskell.TH
 -- 
 -- Here's how you can use it with tuples:
 -- 
--- >trd :: FieldLens "3" v v' a' a => a -> v
--- >trd = view . fieldLens (Field :: Field "3")
+-- >trd :: Field "3" v v' a' a => a -> v
+-- >trd = view . fieldLens (FieldName :: FieldName "3")
 -- The function above will get you the third item of any tuple, which has it.
-class FieldLens (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
+class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
   -- |
   -- A polymorphic lens. E.g.:
   -- 
-  -- >ageLens :: FieldLens "age" v v' a' a => Lens a a' v v'
-  -- >ageLens = fieldLens (Field :: Field "age") 
-  fieldLens :: Field n -> Lens a a' v v'
+  -- >ageLens :: Field "age" v v' a' a => Lens a a' v v'
+  -- >ageLens = fieldLens (FieldName :: FieldName "age") 
+  fieldLens :: FieldName n -> Lens a a' v v'
 
 
 -- |
 -- A specialised version of "Data.Proxy.Proxy".
 -- Defined for compatibility with \"base-4.6\", 
 -- since @Proxy@ was only defined in \"base-4.7\".
-data Field (t :: Symbol) = Field
+data FieldName (t :: Symbol)
 
 
 -- * Record Types
@@ -127,22 +127,22 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldLens $(varT selectedNVarName)
-                              $(pure recordType)
-                              $(pure record'Type)
-                              $(varT selectedVVarName)
-                              $(varT selectedV'VarName)
-                              where
+          instance Field $(varT selectedNVarName)
+                         $(pure recordType)
+                         $(pure record'Type)
+                         $(varT selectedVVarName)
+                         $(varT selectedV'VarName)
+                         where
             {-# INLINE fieldLens #-}
             fieldLens = const $(pure fieldLensLambda)
         |]
 
         
-instance FieldLens "1" (Identity v1) (Identity v1') v1 v1' where
+instance Field "1" (Identity v1) (Identity v1') v1 v1' where
   fieldLens = const $ \f -> fmap Identity . f . runIdentity
 
 
--- Generate FieldLens instances for tuples
+-- Generate Field instances for tuples
 return $ do
   arity <- [2 .. 24]
   nIndex <- [1 .. arity]
@@ -188,12 +188,12 @@ return $ do
       in
         head $ unsafePerformIO $ runQ $
         [d|
-          instance FieldLens $(pure (LitT (StrTyLit (show nIndex))))
-                              $(pure tupleType)
-                              $(pure tuple'Type)
-                              $(varT selectedVVarName)
-                              $(varT selectedV'VarName)
-                              where
+          instance Field $(pure (LitT (StrTyLit (show nIndex))))
+                         $(pure tupleType)
+                         $(pure tuple'Type)
+                         $(varT selectedVVarName)
+                         $(varT selectedV'VarName)
+                         where
             {-# INLINE fieldLens #-}
             fieldLens = const $(pure fieldLensLambda)
         |]
