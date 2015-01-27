@@ -48,7 +48,6 @@ install:
       $([ "$tests" = "1" ] && echo "--enable-tests")
       $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
       -f doctest
-      -f demo
   - cabal build
 
 script:

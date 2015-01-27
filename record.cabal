@@ -50,10 +50,6 @@ flag doctest
   default: True
   manual: True
 
-flag demo
-  description: Build Demo
-  default: False
-
 
 library
   hs-source-dirs:
@@ -100,16 +96,20 @@ test-suite doctest
     Haskell2010
   if !flag(doctest)
     buildable: False
-  else
-    build-depends:
-      doctest == 0.9.*,
-      directory == 1.2.*,
-      filepath == 1.3.*,
-      base-prelude,
-      base
+  build-depends:
+    doctest == 0.9.*,
+    directory == 1.2.*,
+    filepath == 1.3.*,
+    base-prelude,
+    base
 
 
-executable demo
+-- Well, it's not a benchmark actually, 
+-- but in Cabal there's no cleaner way to specify an executable, 
+-- which is not intended for distribution.
+benchmark demo
+  type: 
+    exitcode-stdio-1.0
   hs-source-dirs:
     demo
   main-is:
@@ -122,10 +122,6 @@ executable demo
     -ddump-splices
   default-language:
     Haskell2010
-  if !flag(demo)
-    buildable: False
-  else
-    build-depends:
-      record,
-      base-prelude,
-      base
+  build-depends:
+    record,
+    base-prelude
