@@ -1,3 +1,6 @@
+# 0.2.1
+* Parsing of qualified identifiers
+
 # 0.2.0
 * Type-changing updates
 * Reimplemented the `Record.Types` API
