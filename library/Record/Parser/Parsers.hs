@@ -2,35 +2,19 @@
 -- A set of composable string parsers.
 module Record.Parser.Parsers where
 
-import BasePrelude hiding (takeWhile, exp)
-import Data.Text (Text)
-import Data.Attoparsec.Text
-import qualified Data.Text as T
+import BasePrelude hiding (takeWhile, exp, try, many)
+import Text.Parsec hiding ((<|>))
 
 
 -- * General stuff
 -------------------------
 
-run :: Parser a -> Text -> Either String a
-run p t =
-  onResult $ parse p t
-  where
-    onResult =
-      \case
-        Fail _ contexts message -> Left $ showString message . showString ". Contexts: " .
-                                          shows contexts $ "."
-        Done _ a -> Right a
-        Partial c -> onResult (c "")
+type Parser = 
+  Parsec String ()
 
--- |
--- Run a parser on a given input,
--- lifting its errors to the context parser.
--- 
--- Consider it a subparser.
-parser :: Parser a -> Text -> Parser a
-parser p t =
-  either fail return $
-  run p t
+run :: Parser a -> String -> String -> Either ParseError a
+run =
+  parse
 
 labeled :: String -> Parser a -> Parser a
 labeled =
@@ -40,20 +24,56 @@ labeled =
 -- *
 -------------------------
 
-skipStringLiteral :: Parser ()
-skipStringLiteral =
-  quoted '"' <|> fail "Not a string literal"
+stringLit :: Parser String
+stringLit =
+  labeled "String Literal" $
+  quoted '"'
   where 
     quoted q = 
       char q *> content <* char q
       where
         content =
-          skipMany char'
+          many char'
           where
             char' = 
-              (char '\\' *> (char q <|> char '\\')) <|>
-              (notChar q)
+              (try (char '\\' *> (try (char q) <|> char '\\'))) <|>
+              (satisfy (/= q))
 
-skipQuasiQuote :: Parser ()
-skipQuasiQuote =
-  undefined
+quasiQuote :: Parser (String, String)
+quasiQuote =
+  labeled "Quasi-quote" $
+  (,) <$> opening <*> manyTill anyChar closing
+  where
+    opening =
+      char '[' *> lowerCaseName <* char '|'
+    closing =
+      string "|]"
+
+lowerCaseName :: Parser String
+lowerCaseName = 
+  (:) <$> firstChar <*> many restChar
+  where
+    firstChar = 
+      satisfy $ \c -> isLower c || c == '_' || c == '\''
+    restChar = 
+      satisfy $ \c -> isAlphaNum c || c == '\'' || c == '_'
+
+
+data Phrase =
+  InCurlies [Phrase] |
+  Rest String
+  deriving (Show)
+
+phrase :: Parser Phrase
+phrase =
+  (try $ Rest <$> rest) <|>
+  (InCurlies <$> inCurlies)
+  where
+    rest =
+      many1 (noneOf "{}")
+    inCurlies =
+      char '{' *> many phrase <* char '}'
+
+phrases :: Parser [Phrase]
+phrases =
+  many phrase <* eof

@@ -69,7 +69,7 @@ library
     Record.Lens
   build-depends:
     -- 
-    attoparsec >= 0.12 && < 0.13,
+    parsec == 3.*,
     -- 
     text,
     --
