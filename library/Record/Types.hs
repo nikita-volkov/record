@@ -40,6 +40,11 @@ class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v
   -- >ageLens = fieldLens (FieldName :: FieldName "age") 
   fieldLens :: FieldName n -> Lens a a' v v'
 
+-- |
+-- A simplified field constraint, 
+-- which excludes the possibility of type-changing updates.
+type Field' n a v = 
+  Field n a a v v
 
 -- |
 -- A specialised version of "Data.Proxy.Proxy".

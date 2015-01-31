@@ -9,7 +9,7 @@ import qualified Data.Text as T
 data Type =
   Type_App Type Type |
   Type_Var Text |
-  Type_Con Text |
+  Type_Con Ident |
   Type_Tuple Int |
   Type_Arrow |
   Type_List |
@@ -79,7 +79,7 @@ type' =
         varType =
           fmap Type_Var $ lowerCaseName
         conType =
-          fmap Type_Con $ upperCaseName
+          fmap Type_Con $ upperCaseIdent
         tupleConType =
           Type_Tuple 0 <$ string "()" <|>
           Type_Tuple . succ . length <$> (char '(' *> many (char ',') <* char ')')
@@ -157,6 +157,25 @@ charLit :: Parser Char
 charLit =
   char '\'' *> ((char '\\' *> (char '\'' <|> char '\\')) <|> notChar '\'') <* char '\''
 
+type Ident =
+  Text
+
+lowerCaseIdent :: Parser Ident
+lowerCaseIdent =
+  labeled "lowerCaseIdent" $
+  fmap (T.intercalate ".") $
+    (<>) <$>
+      (many (upperCaseName <* char '.')) <*>
+      (pure <$> (lowerCaseName <|> symbolicIdent))
+
+upperCaseIdent :: Parser Ident
+upperCaseIdent =
+  labeled "upperCaseIdent" $
+  fmap (T.intercalate ".") $
+    (<>) <$>
+      (many (upperCaseName <* char '.')) <*>
+      (pure <$> (upperCaseName <|> symbolicIdent))
+
 
 type Lens =
   [Text]
@@ -169,8 +188,8 @@ lens =
 
 data Exp =
   Exp_Record RecordExp |
-  Exp_Var Text |
-  Exp_Con Text |
+  Exp_Var Ident |
+  Exp_Con Ident |
   Exp_TupleCon Int |
   Exp_Nil |
   Exp_Lit Lit |
@@ -235,9 +254,9 @@ exp =
                     field =
                       (,) <$> lowerCaseName <*> (skipSpace *> char '=' *> skipSpace *> exp)
             var =
-              Exp_Var <$> (lowerCaseName <|> symbolicIdent)
+              Exp_Var <$> lowerCaseIdent
             con =
-              Exp_Con <$> (upperCaseName <|> symbolicIdent)
+              Exp_Con <$> upperCaseIdent
             tupleCon =
               Exp_TupleCon 0 <$ string "()" <|>
               Exp_TupleCon . succ . length <$> (char '(' *> many (char ',') <* char ')')
