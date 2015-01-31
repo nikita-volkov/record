@@ -61,11 +61,12 @@ library
   default-language:
     Haskell2010
   other-modules:
-    Record.Parser
+    Record.Parser.Parsers
   exposed-modules:
+    -- A high-level public parser API
+    Record.Parser
     Record.Types
     Record.Lens
-    Record
   build-depends:
     -- 
     attoparsec >= 0.12 && < 0.13,
