@@ -1,8 +1,9 @@
 -- |
 -- A set of composable string parsers.
-module Record.Parser.Parsers where
+module Record.Preprocessor.Parsing where
 
-import BasePrelude hiding (takeWhile, exp, try, many)
+import Record.Prelude hiding (takeWhile, exp, try, many)
+import Record.Preprocessor.Model
 import Text.Parsec hiding ((<|>))
 
 
@@ -39,7 +40,7 @@ stringLit =
               (try (char '\\' *> (try (char q) <|> char '\\'))) <|>
               (satisfy (/= q))
 
-quasiQuote :: Parser (String, String)
+quasiQuote :: Parser QuasiQuote
 quasiQuote =
   labeled "Quasi-quote" $
   (,) <$> opening <*> manyTill anyChar closing
@@ -59,21 +60,21 @@ lowerCaseName =
       satisfy $ \c -> isAlphaNum c || c == '\'' || c == '_'
 
 
-data Phrase =
-  InCurlies [Phrase] |
-  Rest String
-  deriving (Show)
+-- * AST
+-------------------------
 
-phrase :: Parser Phrase
-phrase =
-  (try $ Rest <$> rest) <|>
-  (InCurlies <$> inCurlies)
+ast :: Parser AST
+ast =
+  (try $ AST_StringLit <$> stringLit) <|>
+  (try $ AST_QuasiQuote <$> quasiQuote) <|>
+  (try $ AST_InCurlies <$> inCurlies) <|>
+  (AST_Other <$> rest)
   where
     rest =
       many1 (noneOf "{}")
     inCurlies =
-      char '{' *> many phrase <* char '}'
+      char '{' *> many ast <* char '}'
 
-phrases :: Parser [Phrase]
-phrases =
-  many phrase <* eof
+asf :: Parser ASF
+asf =
+  many ast <* eof

@@ -61,17 +61,21 @@ library
   default-language:
     Haskell2010
   other-modules:
-    Record.Parser.Parsers
+    Record.Preprocessor.Model
+    Record.Preprocessor.Parsing
+    Record.Preprocessor.Rendering
+    Record.Preprocessor.HSE
   exposed-modules:
-    -- A high-level public parser API
-    Record.Parser
     Record.Types
     Record.Lens
+    Record.Preprocessor
   build-depends:
     -- 
+    haskell-src-exts == 1.16.*,
     parsec == 3.*,
     -- 
     text,
+    unordered-containers == 0.2.*,
     --
     template-haskell,
     -- 
@@ -128,9 +132,9 @@ benchmark demo
     base-prelude
 
 
-executable recordpp
+executable record-preprocessor
   hs-source-dirs:
-    recordpp
+    preprocessor
   main-is:
     Main.hs
   ghc-options:
@@ -143,7 +147,16 @@ executable recordpp
   default-language:
     Haskell2010
   build-depends:
-    haskell-src-exts == 1.16.*,
-    haskell-src-meta == 0.6.*,
+    -- 
     record,
-    base-prelude
+    -- 
+    haskell-src-exts == 1.16.*,
+    parsec == 3.*,
+    -- 
+    text,
+    unordered-containers == 0.2.*,
+    --
+    template-haskell,
+    -- 
+    transformers >= 0.2 && < 0.5,
+    base-prelude >= 0.1 && < 0.2
