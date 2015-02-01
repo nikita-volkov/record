@@ -65,6 +65,7 @@ library
     Record.Preprocessor.Parsing
     Record.Preprocessor.Rendering
     Record.Preprocessor.HSE
+    Record.Preprocessor.HSE.ASFTypeAssocs
   exposed-modules:
     Record.Types
     Record.Lens
