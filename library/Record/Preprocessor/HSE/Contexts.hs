@@ -10,11 +10,11 @@ import qualified Language.Haskell.Exts as E
 type Contexts =
   [Context]
 
-data LabelContext =
-  LabelContext_Type |
-  LabelContext_Exp |
-  LabelContext_Pat |
-  LabelContext_Decl
+data PlaceholderContext =
+  PlaceholderContext_Type |
+  PlaceholderContext_Exp |
+  PlaceholderContext_Pat |
+  PlaceholderContext_Decl
 
 module_ :: E.Module -> Contexts
 module_ (E.Module _ _ _ _ _ _ decls) =
@@ -129,7 +129,7 @@ type_ =
     E.TyParArray t -> type_ t
     E.TyApp t1 t2 -> type_ t1 <> type_ t2
     E.TyVar _ -> mempty
-    E.TyCon n -> qName LabelContext_Type n
+    E.TyCon n -> qName PlaceholderContext_Type n
     E.TyParen t -> type_ t
     E.TyInfix t1 _ t2 -> type_ t1 <> type_ t2
     E.TyKind t _ -> type_ t
@@ -152,13 +152,13 @@ asst =
     E.EqualP t1 t2 -> type_ t1 <> type_ t2
     E.ParenA a -> asst a
 
-qName :: LabelContext -> E.QName -> Contexts
+qName :: PlaceholderContext -> E.QName -> Contexts
 qName c =
   \case
     E.UnQual n -> name c n
     _ -> mempty
 
-name :: LabelContext -> E.Name -> Contexts
+name :: PlaceholderContext -> E.Name -> Contexts
 name c =
   error . showString "TODO: name: " . show
 
@@ -173,7 +173,7 @@ exp =
   \case
     E.Var _ -> mempty
     E.IPVar _ -> mempty
-    E.Con q -> qName LabelContext_Exp q
+    E.Con q -> qName PlaceholderContext_Exp q
     E.Lit _ -> mempty
     E.InfixApp e1 _ e2 -> exp e1 <> exp e2
     E.App e1 e2 -> exp e1 <> exp e2
@@ -254,7 +254,7 @@ pat =
     E.PLit _ _ -> mempty
     E.PNPlusK _ _ -> mempty
     E.PInfixApp p1 _ p2 -> pat p1 <> pat p2
-    E.PApp q pl -> qName LabelContext_Pat q <> foldMap pat pl
+    E.PApp q pl -> qName PlaceholderContext_Pat q <> foldMap pat pl
     E.PTuple _ pl -> foldMap pat pl
     E.PList pl -> foldMap pat pl
     E.PParen p -> pat p
