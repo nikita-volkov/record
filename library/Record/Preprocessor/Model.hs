@@ -26,3 +26,17 @@ data Context =
   Context_Pat |
   Context_Decl
   deriving (Show)
+
+data TypeAST =
+  TypeAST_RecordType RecordType |
+  TypeAST_InRoundies TypeASF |
+  TypeAST_InSquarelies TypeASF |
+  TypeAST_Char Char
+
+type TypeASF =
+  [TypeAST]
+
+type RecordType =
+  [(String, TypeASF)]
+
+

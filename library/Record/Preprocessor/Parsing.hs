@@ -92,5 +92,27 @@ contextASF =
   many contextAST <* eof
 
 
+-- * TypeAST
+-------------------------
 
+typeAST :: Parse TypeAST
+typeAST =
+  (try $ TypeAST_RecordType <$> recordType) <|>
+  (try $ TypeAST_InRoundies <$> asfBetween '(' ')') <|>
+  (try $ TypeAST_InSquarelies <$> asfBetween '[' ']') <|>
+  (TypeAST_Char <$> anyChar)
+  where
+    asfBetween opening closing =
+      char opening *> manyTill typeAST (try (char closing))
 
+recordType :: Parse RecordType
+recordType =
+  char '{' *> skipMany space *> sepBy1 field sep <* end
+  where
+    field =
+      (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
+              manyTill typeAST (try (lookAhead (sep <|> end)))
+    sep =
+      skipMany space <* char ',' <* skipMany space
+    end =
+      skipMany space <* char '}'
