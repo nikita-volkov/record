@@ -9,13 +9,21 @@ import qualified Record.Preprocessor.HSE as HSE
 
 process :: String -> Either String String
 process =
-  traverseASTs HSE.Mode_Module <=< Parsing.run Parsing.asf ""
+  traverseASF HSE.Mode_Module <=< Parsing.run Parsing.asf ""
   where
-    traverseASTs mode asf =
-      fmap mconcat $ do
+    traverseASF mode asf =
+      do
         modes <- (fmap . fmap) hseModeByContext $ contexts
-        zipWithM traverseASTs modes subASFs
+        loop (asf, modes)
       where
+        loop =
+          \case 
+            (,) (AST_InCurlies asf' : asf) (mode : modes) -> 
+              traverseASF mode asf' >>= \x -> fmap (x <>) $ loop (asf, modes)
+            (,) (ast : asf) modes -> 
+              fmap (Rendering.ast ast <>) $ loop (asf, modes)
+            (,) [] [] -> return ""
+            (,) _ _ -> error "Unmatching ASF and modes"
         hseModeByContext =
           \case
             Context_RecordType -> HSE.Mode_Type
@@ -26,7 +34,7 @@ process =
             AST_InCurlies asf -> Just asf
             _ -> Nothing
         rendering =
-          Rendering.asts asf
+          Rendering.asf asf
         contexts =
           HSE.runParseResult $ HSE.reifyContexts mode rendering
 

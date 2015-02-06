@@ -7,5 +7,8 @@ import Record.Preprocessor
 
 
 main =
-  undefined
+  do
+    string <- readFile "samples/1.hs"
+    print $ process string
+
 

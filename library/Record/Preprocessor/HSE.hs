@@ -24,7 +24,7 @@ runParseResult =
 reifyContexts :: Mode -> String -> E.ParseResult [Context]
 reifyContexts =
   \case
-    Mode_Module -> 
-      fmap (Contexts.module_) . E.parseModule
-      -- where
-      --   onResult = 
+    Mode_Module -> fmap Contexts.module_ . E.parseModule
+    Mode_Type   -> fmap Contexts.type_ . E.parseType
+    Mode_Exp    -> fmap Contexts.exp . E.parseExp
+    Mode_Pat    -> fmap Contexts.pat . E.parsePat
