@@ -9,6 +9,6 @@ import Record.Preprocessor
 main =
   do
     string <- readFile "samples/1.hs"
-    print $ process string
+    print $ process "samples/1.hs" string
 
 

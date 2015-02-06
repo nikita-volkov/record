@@ -7,35 +7,28 @@ import qualified Record.Preprocessor.Rendering as Rendering
 import qualified Record.Preprocessor.HSE as HSE
 
 
-process :: String -> Either String String
+process :: String -> String -> Either String String
 process =
-  traverseASF HSE.Mode_Module <=< Parsing.run Parsing.asf ""
-  where
-    traverseASF mode asf =
-      do
-        modes <- (fmap . fmap) hseModeByContext $ contexts
-        loop (asf, modes)
-      where
-        loop =
-          \case 
-            (,) (AST_InCurlies asf' : asf) (mode : modes) -> 
-              traverseASF mode asf' >>= \x -> fmap (x <>) $ loop (asf, modes)
-            (,) (ast : asf) modes -> 
-              fmap (Rendering.ast ast <>) $ loop (asf, modes)
-            (,) [] [] -> return ""
-            (,) _ _ -> error "Unmatching ASF and modes"
-        hseModeByContext =
-          \case
-            Context_Type -> HSE.Mode_Type
-            Context_Exp  -> HSE.Mode_Exp
-            Context_Pat  -> HSE.Mode_Pat
-        subASFs =
-          catMaybes $ flip map asf $ \case
-            AST_InCurlies asf -> Just asf
-            _ -> Nothing
-        rendering =
-          Rendering.asf asf
-        contexts =
-          HSE.runParseResult $ HSE.reifyContexts mode rendering
+  undefined
+
+  
+type Process =
+  ReaderT String (Either String)
+
+parse :: Parsing.Parse a -> String -> Process a
+parse p s =
+  ReaderT $ \name -> Parsing.run p name s
+
+-- |
+-- Detect contexts of all top-level record splices.
+contexts :: String -> Process [Context]
+contexts =
+  parse Parsing.asf >=>
+  lift . HSE.runParseResult . HSE.reifyContexts HSE.Mode_Module . Rendering.asf
+      
+
+
+
+
 
 

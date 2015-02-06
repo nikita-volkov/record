@@ -63,6 +63,7 @@ library
   other-modules:
     Record.Preprocessor.Model
     Record.Preprocessor.Parsing
+    Record.Preprocessor.ContextAwareParsing
     Record.Preprocessor.Rendering
     Record.Preprocessor.HSE
     Record.Preprocessor.HSE.Contexts
@@ -81,7 +82,7 @@ library
     template-haskell,
     -- 
     transformers >= 0.2 && < 0.5,
-    base-prelude >= 0.1 && < 0.2,
+    base-prelude >= 0.1.16 && < 0.2,
     base >= 4.6 && < 4.9
 
 
