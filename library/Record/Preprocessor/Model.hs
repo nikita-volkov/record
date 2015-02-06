@@ -11,14 +11,14 @@ data ContextAST =
   deriving (Show)
 
 type QuasiQuote =
-  (,) QualifiedIdent String
+  (QualifiedIdent, String)
 
 type QualifiedIdent =
-  (,) ([] String) String
+  ([String], String)
 
 -- | Abstract syntax forest
 type ContextASF =
-  [] ContextAST
+  [ContextAST]
 
 data Context =
   Context_Type |
