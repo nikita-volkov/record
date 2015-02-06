@@ -7,7 +7,7 @@ data AST =
   AST_InCurlies [AST] |
   AST_StringLit String |
   AST_QuasiQuote QuasiQuote |
-  AST_Other String
+  AST_Char Char
   deriving (Show)
 
 type QuasiQuote =

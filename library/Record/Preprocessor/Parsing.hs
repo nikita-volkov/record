@@ -82,12 +82,10 @@ ast =
   (try $ AST_StringLit <$> stringLit) <|>
   (try $ AST_QuasiQuote <$> quasiQuote) <|>
   (try $ AST_InCurlies <$> inCurlies) <|>
-  (AST_Other <$> rest)
+  (AST_Char <$> anyChar)
   where
-    rest =
-      many1 (noneOf "{}")
     inCurlies =
-      char '{' *> many ast <* char '}'
+      char '{' *> manyTill ast (try (char '}'))
 
 asf :: Parser ASF
 asf =

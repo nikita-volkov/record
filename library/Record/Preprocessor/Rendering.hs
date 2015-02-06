@@ -12,14 +12,14 @@ asf asf =
       AST_InCurlies _  -> "RECORD_PREPROCESSOR_PLACEHOLDER"
       AST_StringLit x  -> stringLit x
       AST_QuasiQuote x -> quasiQuote x
-      AST_Other x      -> x
+      AST_Char x       -> return x
 
 ast :: AST -> String
 ast =
   \case
     AST_StringLit x  -> stringLit x
     AST_QuasiQuote x -> quasiQuote x
-    AST_Other x      -> x
+    AST_Char x       -> return x
     AST_InCurlies _  -> error "AST_InCurlies is not supported"
 
 stringLit :: String -> String
