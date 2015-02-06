@@ -15,7 +15,7 @@ process =
       do
         lASTs <- return $ labelASTs asts
         rendering <- return $ Rendering.labeledASTs lASTs
-        labelTypeMap <- HSE.runParseResult $ HSE.reifyASFTypeMap mode rendering
+        labelTypeMap <- HSE.runParseResult $ HSE.reifyContextMap mode rendering
         
         undefined
 

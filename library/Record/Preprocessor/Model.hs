@@ -20,14 +20,14 @@ type QualifiedIdent =
 type ASF =
   [] AST
 
-data ASFType =
-  ASFType_RecordType |
-  ASFType_RecordExp |
-  ASFType_RecordPat
+data Context =
+  Context_RecordType |
+  Context_RecordExp |
+  Context_RecordPat
   deriving (Show)
 
-type ASFTypeMap =
-  HashMap Label ASFType
+type ContextMap =
+  HashMap Label Context
 
 data LabeledAST =
   LabeledAST_Label [AST] Label |

@@ -4,24 +4,24 @@ import Record.Prelude
 import Record.Preprocessor.Model
 import qualified Language.Haskell.Exts as E
 import qualified Data.HashMap.Strict as HashMap
-import qualified Record.Preprocessor.HSE.ASFTypeAssocs as ASFTypeAssocs
+import qualified Record.Preprocessor.HSE.LabelContextAssocs as LabelContextAssocs
 
 
 data Mode =
   Mode_Module
 
-data Context =
-  Context_Type |
-  Context_Exp |
-  Context_Pat |
-  Context_Decl
+runParseResult :: E.ParseResult a -> Either String a
+runParseResult =
+  \case
+    E.ParseOk a -> return a
+    E.ParseFailed l m -> Left $ m <> "; Location: " <> show l
 
 -- |
 -- Parses the code using "haskell-src-exts", reifying the AST types.
-reifyASFTypeMap :: Mode -> String -> E.ParseResult (HashMap Label ASFType)
-reifyASFTypeMap =
+reifyContextMap :: Mode -> String -> E.ParseResult (HashMap Label Context)
+reifyContextMap =
   \case
     Mode_Module -> 
-      fmap (HashMap.fromList . ASFTypeAssocs.module_) . E.parseModule
+      fmap (HashMap.fromList . LabelContextAssocs.module_) . E.parseModule
       -- where
       --   onResult = 
