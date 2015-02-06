@@ -13,9 +13,10 @@ import Text.Parsec hiding ((<|>))
 type Parser = 
   Parsec String ()
 
-run :: Parser a -> String -> String -> Either ParseError a
-run =
-  parse
+run :: Parser a -> String -> String -> Either String a
+run p n =
+  either (Left . show) Right .
+  parse p n
 
 labeled :: String -> Parser a -> Parser a
 labeled =

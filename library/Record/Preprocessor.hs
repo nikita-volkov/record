@@ -2,6 +2,22 @@ module Record.Preprocessor where
 
 import Record.Prelude
 import Record.Preprocessor.Model
+import qualified Record.Preprocessor.Parsing as Parsing
+import qualified Record.Preprocessor.Rendering as Rendering
+import qualified Record.Preprocessor.HSE as HSE
+
+
+process :: String -> Either String String
+process =
+  traverseASTs HSE.Mode_Module <=< Parsing.run Parsing.asf ""
+  where
+    traverseASTs mode asts =
+      do
+        lASTs <- return $ labelASTs asts
+        rendering <- return $ Rendering.labeledASTs lASTs
+        labelTypeMap <- HSE.runParseResult $ HSE.reifyASFTypeMap mode rendering
+        
+        undefined
 
 
 -- |
