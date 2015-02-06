@@ -81,12 +81,14 @@ ast :: Parser AST
 ast =
   (try $ AST_StringLit <$> stringLit) <|>
   (try $ AST_QuasiQuote <$> quasiQuote) <|>
-  (try $ AST_InCurlies <$> inCurlies) <|>
+  (try $ AST_InCurlies <$> asfBetween '{' '}') <|>
   (AST_Char <$> anyChar)
-  where
-    inCurlies =
-      char '{' *> manyTill ast (try (char '}'))
 
 asf :: Parser ASF
 asf =
   many ast <* eof
+
+asfBetween :: Char -> Char -> Parser ASF
+asfBetween opening closing =
+  char opening *> manyTill ast (try (char closing))
+
