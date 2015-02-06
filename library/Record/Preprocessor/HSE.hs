@@ -24,7 +24,13 @@ runParseResult =
 reifyContexts :: Mode -> String -> E.ParseResult [Context]
 reifyContexts =
   \case
-    Mode_Module -> fmap Contexts.module_ . E.parseModule
-    Mode_Type   -> fmap Contexts.type_ . E.parseType
-    Mode_Exp    -> fmap Contexts.exp . E.parseExp
-    Mode_Pat    -> fmap Contexts.pat . E.parsePat
+    Mode_Module -> fmap Contexts.module_ . E.parseModuleWithMode parseMode
+    Mode_Type   -> fmap Contexts.type_ . E.parseTypeWithMode parseMode
+    Mode_Exp    -> fmap Contexts.exp . E.parseExpWithMode parseMode
+    Mode_Pat    -> fmap Contexts.pat . E.parsePatWithMode parseMode
+
+parseMode :: E.ParseMode
+parseMode =
+  E.defaultParseMode {
+    E.extensions = map E.EnableExtension [minBound .. maxBound]
+  }
