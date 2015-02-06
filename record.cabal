@@ -65,7 +65,7 @@ library
     Record.Preprocessor.Parsing
     Record.Preprocessor.Rendering
     Record.Preprocessor.HSE
-    Record.Preprocessor.HSE.LabelContextAssocs
+    Record.Preprocessor.HSE.Contexts
   exposed-modules:
     Record.Types
     Record.Lens

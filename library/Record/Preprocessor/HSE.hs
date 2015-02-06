@@ -4,11 +4,14 @@ import Record.Prelude
 import Record.Preprocessor.Model
 import qualified Language.Haskell.Exts as E
 import qualified Data.HashMap.Strict as HashMap
-import qualified Record.Preprocessor.HSE.LabelContextAssocs as LabelContextAssocs
+import qualified Record.Preprocessor.HSE.Contexts as Contexts
 
 
 data Mode =
-  Mode_Module
+  Mode_Module |
+  Mode_Type |
+  Mode_Exp |
+  Mode_Pat
 
 runParseResult :: E.ParseResult a -> Either String a
 runParseResult =
@@ -17,11 +20,11 @@ runParseResult =
     E.ParseFailed l m -> Left $ m <> "; Location: " <> show l
 
 -- |
--- Parses the code using "haskell-src-exts", reifying the AST types.
-reifyContextMap :: Mode -> String -> E.ParseResult (HashMap Label Context)
-reifyContextMap =
+-- Parses the code using "haskell-src-exts", reifying the AST contexts.
+reifyContexts :: Mode -> String -> E.ParseResult [Context]
+reifyContexts =
   \case
     Mode_Module -> 
-      fmap (HashMap.fromList . LabelContextAssocs.module_) . E.parseModule
+      fmap (Contexts.module_) . E.parseModule
       -- where
       --   onResult = 

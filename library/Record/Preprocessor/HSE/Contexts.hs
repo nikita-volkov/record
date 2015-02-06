@@ -1,14 +1,14 @@
 -- |
 -- Aggregation of a list of associations.
-module Record.Preprocessor.HSE.LabelContextAssocs where
+module Record.Preprocessor.HSE.Contexts where
 
 import Record.Prelude hiding (exp, bracket)
 import Record.Preprocessor.Model
 import qualified Language.Haskell.Exts as E
 
 
-type LabelContextAssocs =
-  [(Label, Context)]
+type Contexts =
+  [Context]
 
 data LabelContext =
   LabelContext_Type |
@@ -16,11 +16,11 @@ data LabelContext =
   LabelContext_Pat |
   LabelContext_Decl
 
-module_ :: E.Module -> LabelContextAssocs
+module_ :: E.Module -> Contexts
 module_ (E.Module _ _ _ _ _ _ decls) =
   foldMap decl decls
 
-decl :: E.Decl -> LabelContextAssocs
+decl :: E.Decl -> Contexts
 decl = 
   \case
     E.TypeDecl _ _ _ t -> type_ t
@@ -54,32 +54,32 @@ decl =
     E.AnnPragma {} -> mempty
     E.MinimalPragma {} -> mempty
 
-rule :: E.Rule -> LabelContextAssocs
+rule :: E.Rule -> Contexts
 rule =
   \(E.Rule _ _ rvm e1 e2) -> (foldMap . foldMap) ruleVar rvm <> exp e1 <> exp e2
 
-ruleVar :: E.RuleVar -> LabelContextAssocs
+ruleVar :: E.RuleVar -> Contexts
 ruleVar =
   \case
     E.RuleVar _ -> mempty
     E.TypedRuleVar _ t -> type_ t
 
-match :: E.Match -> LabelContextAssocs
+match :: E.Match -> Contexts
 match =
   \(E.Match _ _ pl tm r b) ->
     foldMap pat pl <> foldMap type_ tm <> rhs r <> binds b
 
-rhs :: E.Rhs -> LabelContextAssocs
+rhs :: E.Rhs -> Contexts
 rhs =
   \case
     E.UnGuardedRhs e -> exp e
     E.GuardedRhss gl -> foldMap guardedRhs gl
 
-guardedRhs :: E.GuardedRhs -> LabelContextAssocs
+guardedRhs :: E.GuardedRhs -> Contexts
 guardedRhs =
   \(E.GuardedRhs _ sl e) -> foldMap stmt sl <> exp e
 
-instDecl :: E.InstDecl -> LabelContextAssocs
+instDecl :: E.InstDecl -> Contexts
 instDecl =
   \case
     E.InsDecl d -> decl d
@@ -87,7 +87,7 @@ instDecl =
     E.InsData _ _ t qcdl dl -> type_ t <> foldMap qualConDecl qcdl <> foldMap deriving_ dl
     E.InsGData _ _ t _ gdl dl -> type_ t <> foldMap gadtDecl gdl <> foldMap deriving_ dl
 
-classDecl :: E.ClassDecl -> LabelContextAssocs
+classDecl :: E.ClassDecl -> Contexts
 classDecl =
   \case
     E.ClsDecl d -> decl d
@@ -96,30 +96,30 @@ classDecl =
     E.ClsTyDef _ t1 t2 -> type_ t1 <> type_ t2
     E.ClsDefSig _ _ t -> type_ t
 
-gadtDecl :: E.GadtDecl -> LabelContextAssocs
+gadtDecl :: E.GadtDecl -> Contexts
 gadtDecl =
   \(E.GadtDecl _ _ pl t) -> foldMap (type_ . snd) pl <> type_ t
 
-qualConDecl :: E.QualConDecl -> LabelContextAssocs
+qualConDecl :: E.QualConDecl -> Contexts
 qualConDecl =
   \(E.QualConDecl _ _ c cd) -> context c <> conDecl cd
 
-conDecl :: E.ConDecl -> LabelContextAssocs
+conDecl :: E.ConDecl -> Contexts
 conDecl =
   \case
     E.ConDecl _ tl -> foldMap type_ tl
     E.InfixConDecl t1 _ t2 -> type_ t1 <> type_ t2
     E.RecDecl {} -> error "Unexpected record declaration"
 
-typeEqn :: E.TypeEqn -> LabelContextAssocs
+typeEqn :: E.TypeEqn -> Contexts
 typeEqn =
   \(E.TypeEqn t1 t2) -> type_ t1 <> type_ t2
 
-deriving_ :: E.Deriving -> LabelContextAssocs
+deriving_ :: E.Deriving -> Contexts
 deriving_ =
   \(_, tl) -> foldMap type_ tl
 
-type_ :: E.Type -> LabelContextAssocs
+type_ :: E.Type -> Contexts
 type_ =
   \case
     E.TyForall _ c t -> context c <> type_ t
@@ -138,11 +138,11 @@ type_ =
     E.TySplice s -> splice s
     E.TyBang _ t -> type_ t
 
-context :: E.Context -> LabelContextAssocs
+context :: E.Context -> Contexts
 context =
   foldMap asst
 
-asst :: E.Asst -> LabelContextAssocs
+asst :: E.Asst -> Contexts
 asst =
   \case
     E.ClassA _ tl -> foldMap type_ tl
@@ -152,23 +152,23 @@ asst =
     E.EqualP t1 t2 -> type_ t1 <> type_ t2
     E.ParenA a -> asst a
 
-qName :: LabelContext -> E.QName -> LabelContextAssocs
+qName :: LabelContext -> E.QName -> Contexts
 qName c =
   \case
     E.UnQual n -> name c n
     _ -> mempty
 
-name :: LabelContext -> E.Name -> LabelContextAssocs
+name :: LabelContext -> E.Name -> Contexts
 name c =
   error . showString "TODO: name: " . show
 
-splice :: E.Splice -> LabelContextAssocs
+splice :: E.Splice -> Contexts
 splice =
   \case
     E.IdSplice _ -> mempty
     E.ParenSplice e -> exp e
 
-exp :: E.Exp -> LabelContextAssocs
+exp :: E.Exp -> Contexts
 exp =
   \case
     E.Var _ -> mempty
@@ -224,7 +224,7 @@ exp =
     E.RightArrHighApp e1 e2 -> exp e1 <> exp e2
     E.LCase al -> foldMap alt al
 
-bracket :: E.Bracket -> LabelContextAssocs
+bracket :: E.Bracket -> Contexts
 bracket =
   \case
     E.ExpBracket e -> exp e
@@ -232,7 +232,7 @@ bracket =
     E.TypeBracket t -> type_ t
     E.DeclBracket dl -> foldMap decl dl
 
-qualStmt :: E.QualStmt -> LabelContextAssocs
+qualStmt :: E.QualStmt -> Contexts
 qualStmt =
   \case
     E.QualStmt s -> stmt s
@@ -242,12 +242,12 @@ qualStmt =
     E.GroupUsing e -> exp e
     E.GroupByUsing e1 e2 -> exp e1 <> exp e2
 
-alt :: E.Alt -> LabelContextAssocs
+alt :: E.Alt -> Contexts
 alt =
   \case
     E.Alt _ p r b -> pat p <> rhs r <> binds b
 
-pat :: E.Pat -> LabelContextAssocs
+pat :: E.Pat -> Contexts
 pat =
   \case
     E.PVar _ -> mempty
@@ -273,7 +273,7 @@ pat =
     E.PQuasiQuote _ _ -> mempty
     E.PBangPat p -> pat p
 
-rPat :: E.RPat -> LabelContextAssocs
+rPat :: E.RPat -> Contexts
 rPat =
   \case
     E.RPOp r _ -> rPat r
@@ -285,7 +285,7 @@ rPat =
     E.RPParen r -> rPat r
     E.RPPat p -> pat p
 
-stmt :: E.Stmt -> LabelContextAssocs
+stmt :: E.Stmt -> Contexts
 stmt =
   \case
     E.Generator _ p e -> pat p <> exp e
@@ -293,13 +293,13 @@ stmt =
     E.LetStmt b -> binds b
     E.RecStmt sl -> foldMap stmt sl
 
-binds :: E.Binds -> LabelContextAssocs
+binds :: E.Binds -> Contexts
 binds =
   \case
     E.BDecls dl -> foldMap decl dl
     E.IPBinds il -> foldMap ipBind il
 
-ipBind :: E.IPBind -> LabelContextAssocs
+ipBind :: E.IPBind -> Contexts
 ipBind =
   \case
     E.IPBind _ _ e -> exp e

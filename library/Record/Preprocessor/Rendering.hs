@@ -4,17 +4,16 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-labeledASTs :: [LabeledAST] -> String
-labeledASTs =
-  foldMap $ \case
-    LabeledAST_Label _ x -> label x
-    LabeledAST_StringLit x -> stringLit x
-    LabeledAST_QuasiQuote x -> quasiQuote x
-    LabeledAST_Other x -> x
-
-label :: Label -> String
-label = 
-  ('(' :) . (<> ")") . id
+asts :: [AST] -> String
+asts asts =
+  flip evalStateT 1 $ do
+    ast <- lift $ asts
+    case ast of
+      AST_InCurlies _  -> join $ fmap (lift . ("(RECORD_PREPROCESSOR_LABEL_" <>) . (<> ")") . show) $ 
+                          state $ id &&& succ
+      AST_StringLit x  -> lift $ stringLit x
+      AST_QuasiQuote x -> lift $ quasiQuote x
+      AST_Other x      -> lift $ x
 
 stringLit :: String -> String
 stringLit =
