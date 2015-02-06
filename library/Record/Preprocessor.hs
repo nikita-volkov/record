@@ -23,8 +23,8 @@ parse p s =
 -- Detect contexts of all top-level record splices.
 contexts :: String -> Process [Context]
 contexts =
-  parse Parsing.asf >=>
-  lift . HSE.runParseResult . HSE.reifyContexts HSE.Mode_Module . Rendering.asf
+  parse Parsing.contextASF >=>
+  lift . HSE.runParseResult . HSE.reifyContexts HSE.Mode_Module . Rendering.contextASF
       
 
 

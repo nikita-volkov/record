@@ -74,21 +74,23 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * AST
+-- * ContextAST
 -------------------------
 
-ast :: Parse AST
-ast =
-  (try $ AST_StringLit <$> stringLit) <|>
-  (try $ AST_QuasiQuote <$> quasiQuote) <|>
-  (try $ AST_InCurlies <$> asfBetween '{' '}') <|>
-  (AST_Char <$> anyChar)
+contextAST :: Parse ContextAST
+contextAST =
+  (try $ ContextAST_StringLit <$> stringLit) <|>
+  (try $ ContextAST_QuasiQuote <$> quasiQuote) <|>
+  (try $ ContextAST_InCurlies <$> asfBetween '{' '}') <|>
+  (ContextAST_Char <$> anyChar)
+  where
+    asfBetween opening closing =
+      char opening *> manyTill contextAST (try (char closing))
 
-asf :: Parse ASF
-asf =
-  many ast <* eof
+contextASF :: Parse ContextASF
+contextASF =
+  many contextAST <* eof
 
-asfBetween :: Char -> Char -> Parse ASF
-asfBetween opening closing =
-  char opening *> manyTill ast (try (char closing))
+
+
 
