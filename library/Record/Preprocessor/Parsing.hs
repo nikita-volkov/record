@@ -46,18 +46,31 @@ quasiQuote =
   (,) <$> opening <*> manyTill anyChar closing
   where
     opening =
-      char '[' *> lowerCaseName <* char '|'
+      char '[' *> lowerCaseQualifiedIdent <* char '|'
     closing =
       string "|]"
 
-lowerCaseName :: Parser String
-lowerCaseName = 
+lowerCaseQualifiedIdent :: Parser QualifiedIdent
+lowerCaseQualifiedIdent =
+  ((,) <$> many1 (upperCaseIdent <* char '.') <*> lowerCaseIdent) <|> 
+  ((,) <$> pure [] <*> lowerCaseIdent)
+
+lowerCaseIdent :: Parser String
+lowerCaseIdent = 
+  labeled "lowerCaseIdent" $
   (:) <$> firstChar <*> many restChar
   where
     firstChar = 
       satisfy $ \c -> isLower c || c == '_' || c == '\''
     restChar = 
       satisfy $ \c -> isAlphaNum c || c == '\'' || c == '_'
+
+upperCaseIdent :: Parser String
+upperCaseIdent =
+  labeled "upperCaseIdent" $
+  (:) <$>
+    satisfy (\c -> isUpper c || c == '_') <*>
+    (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
 -- * AST
