@@ -26,9 +26,9 @@ process =
             (,) _ _ -> error "Unmatching ASF and modes"
         hseModeByContext =
           \case
-            Context_RecordType -> HSE.Mode_Type
-            Context_RecordExp  -> HSE.Mode_Exp
-            Context_RecordPat  -> HSE.Mode_Pat
+            Context_Type -> HSE.Mode_Type
+            Context_Exp  -> HSE.Mode_Exp
+            Context_Pat  -> HSE.Mode_Pat
         subASFs =
           catMaybes $ flip map asf $ \case
             AST_InCurlies asf -> Just asf

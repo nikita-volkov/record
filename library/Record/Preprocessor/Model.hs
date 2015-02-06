@@ -21,7 +21,8 @@ type ASF =
   [] AST
 
 data Context =
-  Context_RecordType |
-  Context_RecordExp |
-  Context_RecordPat
+  Context_Type |
+  Context_Exp |
+  Context_Pat |
+  Context_Decl
   deriving (Show)
