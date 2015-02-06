@@ -10,15 +10,15 @@ import Text.Parsec hiding ((<|>))
 -- * General stuff
 -------------------------
 
-type Parser = 
+type Parse = 
   Parsec String ()
 
-run :: Parser a -> String -> String -> Either String a
+run :: Parse a -> String -> String -> Either String a
 run p n =
   either (Left . show) Right .
   parse p n
 
-labeled :: String -> Parser a -> Parser a
+labeled :: String -> Parse a -> Parse a
 labeled =
   flip (<?>)
 
@@ -26,7 +26,7 @@ labeled =
 -- *
 -------------------------
 
-stringLit :: Parser String
+stringLit :: Parse String
 stringLit =
   labeled "String Literal" $
   quoted '"'
@@ -41,7 +41,7 @@ stringLit =
               (try (char '\\' *> (try (char q) <|> char '\\'))) <|>
               (satisfy (/= q))
 
-quasiQuote :: Parser QuasiQuote
+quasiQuote :: Parse QuasiQuote
 quasiQuote =
   labeled "Quasi-quote" $
   (,) <$> opening <*> manyTill anyChar closing
@@ -51,12 +51,12 @@ quasiQuote =
     closing =
       string "|]"
 
-lowerCaseQualifiedIdent :: Parser QualifiedIdent
+lowerCaseQualifiedIdent :: Parse QualifiedIdent
 lowerCaseQualifiedIdent =
   ((,) <$> many1 (upperCaseIdent <* char '.') <*> lowerCaseIdent) <|> 
   ((,) <$> pure [] <*> lowerCaseIdent)
 
-lowerCaseIdent :: Parser String
+lowerCaseIdent :: Parse String
 lowerCaseIdent = 
   labeled "lowerCaseIdent" $
   (:) <$> firstChar <*> many restChar
@@ -66,7 +66,7 @@ lowerCaseIdent =
     restChar = 
       satisfy $ \c -> isAlphaNum c || c == '\'' || c == '_'
 
-upperCaseIdent :: Parser String
+upperCaseIdent :: Parse String
 upperCaseIdent =
   labeled "upperCaseIdent" $
   (:) <$>
@@ -77,18 +77,18 @@ upperCaseIdent =
 -- * AST
 -------------------------
 
-ast :: Parser AST
+ast :: Parse AST
 ast =
   (try $ AST_StringLit <$> stringLit) <|>
   (try $ AST_QuasiQuote <$> quasiQuote) <|>
   (try $ AST_InCurlies <$> asfBetween '{' '}') <|>
   (AST_Char <$> anyChar)
 
-asf :: Parser ASF
+asf :: Parse ASF
 asf =
   many ast <* eof
 
-asfBetween :: Char -> Char -> Parser ASF
+asfBetween :: Char -> Char -> Parse ASF
 asfBetween opening closing =
   char opening *> manyTill ast (try (char closing))
 
