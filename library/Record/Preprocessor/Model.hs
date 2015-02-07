@@ -31,6 +31,8 @@ data TypeAST =
   TypeAST_RecordType RecordType |
   TypeAST_InRoundies TypeASF |
   TypeAST_InSquarelies TypeASF |
+  TypeAST_StringLit String |
+  TypeAST_QuasiQuote QuasiQuote |
   TypeAST_Char Char
 
 type TypeASF =

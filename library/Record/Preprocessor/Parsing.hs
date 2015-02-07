@@ -100,6 +100,8 @@ typeAST =
   (try $ TypeAST_RecordType <$> recordType) <|>
   (try $ TypeAST_InRoundies <$> asfBetween '(' ')') <|>
   (try $ TypeAST_InSquarelies <$> asfBetween '[' ']') <|>
+  (try $ TypeAST_StringLit <$> stringLit) <|>
+  (try $ TypeAST_QuasiQuote <$> quasiQuote) <|>
   (TypeAST_Char <$> anyChar)
   where
     asfBetween opening closing =
