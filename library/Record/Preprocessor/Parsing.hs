@@ -97,15 +97,7 @@ placeholderASF =
 
 typeAST :: Parse TypeAST
 typeAST =
-  (try $ TypeAST_RecordType <$> recordType) <|>
-  (try $ TypeAST_InRoundies <$> asfBetween '(' ')') <|>
-  (try $ TypeAST_InSquarelies <$> asfBetween '[' ']') <|>
-  (try $ TypeAST_StringLit <$> stringLit) <|>
-  (try $ TypeAST_QuasiQuote <$> quasiQuote) <|>
-  (TypeAST_Char <$> anyChar)
-  where
-    asfBetween opening closing =
-      char opening *> manyTill typeAST (try (char closing))
+  TypeAST <$> generalAST recordType
 
 recordType :: Parse RecordType
 recordType =
@@ -118,3 +110,19 @@ recordType =
       skipMany space <* char ',' <* skipMany space
     end =
       skipMany space <* char '}'
+
+
+-- * GeneralAST
+-------------------------
+
+generalAST :: Parse a -> Parse (GeneralAST a)
+generalAST injection =
+  (try $ GeneralAST_Injection <$> injection) <|>
+  (try $ GeneralAST_StringLit <$> stringLit) <|>
+  (try $ GeneralAST_QuasiQuote <$> quasiQuote) <|>
+  (try $ GeneralAST_InRoundies <$> enclosedIn '(' ')') <|>
+  (try $ GeneralAST_InSquarelies <$> enclosedIn '[' ']') <|>
+  (GeneralAST_Char <$> anyChar)
+  where
+    enclosedIn opening closing =
+      char opening *> manyTill (generalAST injection) (try (char closing))

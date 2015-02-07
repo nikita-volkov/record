@@ -27,13 +27,8 @@ data Context =
   Context_Decl
   deriving (Show)
 
-data TypeAST =
-  TypeAST_RecordType RecordType |
-  TypeAST_InRoundies TypeASF |
-  TypeAST_InSquarelies TypeASF |
-  TypeAST_StringLit String |
-  TypeAST_QuasiQuote QuasiQuote |
-  TypeAST_Char Char
+newtype TypeAST =
+  TypeAST (GeneralAST RecordType)
 
 type TypeASF =
   [TypeAST]
@@ -41,13 +36,8 @@ type TypeASF =
 type RecordType =
   [(String, TypeASF)]
 
-data ExpAST =
-  ExpAST_RecordExp RecordExp |
-  ExpAST_InRoundies ExpASF |
-  ExpAST_InSquarelies ExpASF |
-  ExpAST_StringLit String |
-  ExpAST_QuasiQuote QuasiQuote |
-  ExpAST_Char Char
+newtype ExpAST =
+  ExpAST (GeneralAST RecordExp)
 
 type ExpASF =
   [ExpAST]
@@ -55,16 +45,24 @@ type ExpASF =
 type RecordExp =
   [(String, Maybe ExpAST)]
 
-data PatAST =
-  PatAST_RecordPat RecordPat |
-  PatAST_InRoundies PatASF |
-  PatAST_InSquarelies PatASF |
-  PatAST_StringLit String |
-  PatAST_QuasiQuote QuasiQuote |
-  PatAST_Char Char
+newtype PatAST =
+  PatAST (GeneralAST RecordPat)
 
 type PatASF =
   [PatAST]
 
 type RecordPat =
   [(String, Maybe PatAST)]
+
+-- |
+-- The most general Haskell syntax tree abstraction,
+-- which allows to parse an injected syntax without breaking contexts.
+data GeneralAST a =
+  GeneralAST_Injection a |
+  GeneralAST_StringLit String |
+  GeneralAST_QuasiQuote QuasiQuote |
+  GeneralAST_InRoundies [GeneralAST a] |
+  GeneralAST_InSquarelies [GeneralAST a] |
+  GeneralAST_Char Char
+
+
