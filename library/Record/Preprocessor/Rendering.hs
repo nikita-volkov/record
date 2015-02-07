@@ -4,23 +4,23 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-contextASF :: ContextASF -> String
-contextASF asf =
+placeholderASF :: PlaceholderASF -> String
+placeholderASF asf =
   do
     ast <- asf
     case ast of
-      ContextAST_InCurlies _  -> "RECORD_PREPROCESSOR_PLACEHOLDER"
-      ContextAST_StringLit x  -> stringLit x
-      ContextAST_QuasiQuote x -> quasiQuote x
-      ContextAST_Char x       -> return x
+      PlaceholderAST_InCurlies _  -> "RECORD_PREPROCESSOR_PLACEHOLDER"
+      PlaceholderAST_StringLit x  -> stringLit x
+      PlaceholderAST_QuasiQuote x -> quasiQuote x
+      PlaceholderAST_Char x       -> return x
 
-contextAST :: ContextAST -> String
-contextAST =
+placeholderAST :: PlaceholderAST -> String
+placeholderAST =
   \case
-    ContextAST_StringLit x  -> stringLit x
-    ContextAST_QuasiQuote x -> quasiQuote x
-    ContextAST_Char x       -> return x
-    ContextAST_InCurlies _  -> error "ContextAST_InCurlies is not supported"
+    PlaceholderAST_StringLit x  -> stringLit x
+    PlaceholderAST_QuasiQuote x -> quasiQuote x
+    PlaceholderAST_Char x       -> return x
+    PlaceholderAST_InCurlies _  -> error "PlaceholderAST_InCurlies is not supported"
 
 stringLit :: String -> String
 stringLit =

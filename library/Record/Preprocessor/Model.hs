@@ -3,11 +3,11 @@ module Record.Preprocessor.Model where
 import Record.Prelude
 
 
-data ContextAST =
-  ContextAST_InCurlies [ContextAST] |
-  ContextAST_StringLit String |
-  ContextAST_QuasiQuote QuasiQuote |
-  ContextAST_Char Char
+data PlaceholderAST =
+  PlaceholderAST_InCurlies [PlaceholderAST] |
+  PlaceholderAST_StringLit String |
+  PlaceholderAST_QuasiQuote QuasiQuote |
+  PlaceholderAST_Char Char
   deriving (Show)
 
 type QuasiQuote =
@@ -17,8 +17,8 @@ type QualifiedIdent =
   ([String], String)
 
 -- | Abstract syntax forest
-type ContextASF =
-  [ContextAST]
+type PlaceholderASF =
+  [PlaceholderAST]
 
 data Context =
   Context_Type |
