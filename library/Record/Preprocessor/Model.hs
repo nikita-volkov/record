@@ -41,4 +41,30 @@ type TypeASF =
 type RecordType =
   [(String, TypeASF)]
 
+data ExpAST =
+  ExpAST_RecordExp RecordExp |
+  ExpAST_InRoundies ExpASF |
+  ExpAST_InSquarelies ExpASF |
+  ExpAST_StringLit String |
+  ExpAST_QuasiQuote QuasiQuote |
+  ExpAST_Char Char
 
+type ExpASF =
+  [ExpAST]
+
+type RecordExp =
+  [(String, Maybe ExpAST)]
+
+data PatAST =
+  PatAST_RecordPat RecordPat |
+  PatAST_InRoundies PatASF |
+  PatAST_InSquarelies PatASF |
+  PatAST_StringLit String |
+  PatAST_QuasiQuote QuasiQuote |
+  PatAST_Char Char
+
+type PatASF =
+  [PatAST]
+
+type RecordPat =
+  [(String, Maybe PatAST)]
