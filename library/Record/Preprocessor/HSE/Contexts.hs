@@ -155,8 +155,8 @@ qName c =
 name :: Context -> E.Name -> Contexts
 name c =
   \case
-    E.Ident "RECORD_PREPROCESSOR_PLACEHOLDER" -> pure c
-    E.Symbol "RECORD_PREPROCESSOR_PLACEHOLDER" -> pure c
+    E.Ident "Ъ" -> pure c
+    E.Symbol "Ъ" -> pure c
     _ -> empty
 
 splice :: E.Splice -> Contexts

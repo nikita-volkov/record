@@ -9,7 +9,7 @@ placeholderASF asf =
   do
     ast <- asf
     case ast of
-      PlaceholderAST_InCurlies _  -> "RECORD_PREPROCESSOR_PLACEHOLDER"
+      PlaceholderAST_InCurlies _  -> "Ъ"
       PlaceholderAST_StringLit x  -> stringLit x
       PlaceholderAST_QuasiQuote x -> quasiQuote x
       PlaceholderAST_Char x       -> return x
