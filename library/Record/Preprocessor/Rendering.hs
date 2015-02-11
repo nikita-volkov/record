@@ -4,23 +4,21 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-placeholderASF :: PlaceholderASF -> String
-placeholderASF asf =
-  do
-    ast <- asf
-    case ast of
-      PlaceholderAST_InCurlies _  -> "Ъ"
-      PlaceholderAST_StringLit x  -> stringLit x
-      PlaceholderAST_QuasiQuote x -> quasiQuote x
-      PlaceholderAST_Char x       -> return x
+placeholderASTUsingPlaceholders :: PlaceholderAST -> String
+placeholderASTUsingPlaceholders =
+  \case
+    PlaceholderAST_InCurlies _ _ -> "Ъ"
+    PlaceholderAST_StringLit x   -> stringLit x
+    PlaceholderAST_QuasiQuote x  -> quasiQuote x
+    PlaceholderAST_Char x        -> return x
 
 placeholderAST :: PlaceholderAST -> String
 placeholderAST =
   \case
-    PlaceholderAST_StringLit x  -> stringLit x
-    PlaceholderAST_QuasiQuote x -> quasiQuote x
-    PlaceholderAST_Char x       -> return x
-    PlaceholderAST_InCurlies _  -> error "PlaceholderAST_InCurlies is not supported"
+    PlaceholderAST_InCurlies _ x -> "{" <> foldMap placeholderAST x <> "}"
+    PlaceholderAST_StringLit x   -> stringLit x
+    PlaceholderAST_QuasiQuote x  -> quasiQuote x
+    PlaceholderAST_Char x        -> return x
 
 stringLit :: String -> String
 stringLit =

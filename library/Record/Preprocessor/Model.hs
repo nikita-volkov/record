@@ -3,8 +3,22 @@ module Record.Preprocessor.Model where
 import Record.Prelude
 
 
+
+data CursorOffset =
+  CursorOffset Int Int
+  deriving (Show, Ord, Eq)
+
+instance Monoid CursorOffset where
+  mempty = 
+    CursorOffset 0 0
+  mappend (CursorOffset l1 c1) (CursorOffset l2 c2) =
+    if l2 <= 0
+      then CursorOffset (l1 + l2) (c1 + c2)
+      else CursorOffset (l1 + l2) c2
+
+
 data PlaceholderAST =
-  PlaceholderAST_InCurlies [PlaceholderAST] |
+  PlaceholderAST_InCurlies CursorOffset [PlaceholderAST] |
   PlaceholderAST_StringLit String |
   PlaceholderAST_QuasiQuote QuasiQuote |
   PlaceholderAST_Char Char
@@ -16,9 +30,7 @@ type QuasiQuote =
 type QualifiedIdent =
   ([String], String)
 
--- | Abstract syntax forest
-type PlaceholderASF =
-  [PlaceholderAST]
+
 
 data Context =
   Context_Type |

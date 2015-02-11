@@ -1,4 +1,11 @@
-module Record.Preprocessor.HSE where
+module Record.Preprocessor.HSE
+(
+  E.ParseResult(..),
+  Mode(..),
+  reifyContexts,
+  srcLocToCursorOffset,
+)
+where
 
 import Record.Prelude
 import Record.Preprocessor.Model
@@ -12,12 +19,6 @@ data Mode =
   Mode_Type |
   Mode_Exp |
   Mode_Pat
-
-runParseResult :: E.ParseResult a -> Either String a
-runParseResult =
-  \case
-    E.ParseOk a -> return a
-    E.ParseFailed l m -> Left $ m <> "; Location: " <> show l
 
 -- |
 -- Parses the code using "haskell-src-exts", reifying the AST contexts.
@@ -34,3 +35,7 @@ parseMode =
   E.defaultParseMode {
     E.extensions = map E.EnableExtension [minBound .. maxBound]
   }
+
+srcLocToCursorOffset :: E.SrcLoc -> CursorOffset
+srcLocToCursorOffset (E.SrcLoc _ l c) =
+  CursorOffset (fromIntegral l) (fromIntegral c)

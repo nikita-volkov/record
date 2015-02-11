@@ -5,6 +5,7 @@ module Record.Preprocessor.Parsing where
 import Record.Prelude hiding (takeWhile, exp, try, many)
 import Record.Preprocessor.Model
 import Text.Parsec hiding ((<|>))
+import Text.Parsec.Error
 
 
 -- * General stuff
@@ -13,10 +14,16 @@ import Text.Parsec hiding ((<|>))
 type Parse = 
   Parsec String ()
 
-run :: Parse a -> String -> String -> Either String a
+type Error =
+  (CursorOffset, String)
+
+run :: Parse a -> String -> String -> Either Error a
 run p n =
-  either (Left . show) Right .
+  either (Left . (cursorOffset . errorPos &&& messageString . head . errorMessages)) Right .
   parse p n
+  where
+    cursorOffset p =
+      CursorOffset (fromIntegral $ sourceLine p) (fromIntegral $ sourceColumn p)
 
 labeled :: String -> Parse a -> Parse a
 labeled =
@@ -25,6 +32,15 @@ labeled =
 
 -- *
 -------------------------
+
+cursorOffset :: Parse CursorOffset
+cursorOffset =
+  flip fmap getPosition $ \p ->
+    CursorOffset (fromIntegral $ sourceLine p) (fromIntegral $ sourceColumn p)
+
+cursorOffsetAtEnd :: Parse CursorOffset
+cursorOffsetAtEnd =
+  skipMany anyChar *> cursorOffset
 
 stringLit :: Parse String
 stringLit =
@@ -81,14 +97,14 @@ placeholderAST :: Parse PlaceholderAST
 placeholderAST =
   (try $ PlaceholderAST_StringLit <$> stringLit) <|>
   (try $ PlaceholderAST_QuasiQuote <$> quasiQuote) <|>
-  (try $ PlaceholderAST_InCurlies <$> asfBetween '{' '}') <|>
+  (try $ PlaceholderAST_InCurlies <$> cursorOffset <*> asfBetween '{' '}') <|>
   (PlaceholderAST_Char <$> anyChar)
   where
     asfBetween opening closing =
       char opening *> manyTill placeholderAST (try (char closing))
 
-placeholderASF :: Parse PlaceholderASF
-placeholderASF =
+placeholderASTs :: Parse [PlaceholderAST]
+placeholderASTs =
   many placeholderAST <* eof
 
 
