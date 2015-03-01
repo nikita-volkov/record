@@ -31,21 +31,18 @@ reifyPlaceholderContexts l =
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
-      (<> o) $
-      mconcat $
-      map (<> CursorOffset 0 (-1)) $
-      flip evalStateT mempty $ do
-        ast <- lift $ l
-        modify $ \o' -> 
-          (o' <>) $
-          either (error . showString "Unexpected parsing error: " . show) id $
-          Parsing.run Parsing.cursorOffsetAtEnd "" $
-          Rendering.placeholderAST ast
+      stringCursorOffset $
+      foldMap Rendering.placeholderAST $
+      catMaybes $
+      flip evalState mempty $ forM l $ \ast -> do
+        modify $ (<> ((stringCursorOffset . Rendering.placeholderASTUsingPlaceholders) ast))
         o' <- get
-        unless (o' < o) mzero
-        lift $ case ast of
-          PlaceholderAST_InCurlies o'' _ -> [o'']
-          _ -> []
-
-
-
+        if o' < o
+          then return $ Just ast
+          else return $ Nothing
+      where
+        stringCursorOffset =
+          (\(CursorOffset l c) -> CursorOffset (pred l) (pred c)) .
+          either (error . showString "Unexpected cursor offset parsing error: " . show) id .
+          Parsing.run Parsing.cursorOffsetAtEnd ""
+      
