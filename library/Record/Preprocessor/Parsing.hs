@@ -29,6 +29,9 @@ labeled :: String -> Parse a -> Parse a
 labeled =
   flip (<?>)
 
+total :: Parse a -> Parse a
+total =
+  (<* eof)  
 
 -- *
 -------------------------
@@ -102,10 +105,6 @@ placeholderAST =
   where
     asfBetween opening closing =
       char opening *> manyTill placeholderAST (try (char closing))
-
-placeholderASTs :: Parse [PlaceholderAST]
-placeholderASTs =
-  many placeholderAST <* eof
 
 
 -- * TypeAST
