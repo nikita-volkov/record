@@ -3,6 +3,13 @@ module Record.Preprocessor.Model where
 import Record.Prelude
 
 
+data Context =
+  Context_Type |
+  Context_Exp |
+  Context_Pat |
+  Context_Decl
+  deriving (Show)
+
 
 data CursorOffset =
   CursorOffset Int Int
@@ -47,37 +54,22 @@ data Placeholder =
   deriving (Show)
 
 
+type TypeAST =
+  GeneralAST TypeExtension
 
-data Context =
-  Context_Type |
-  Context_Exp |
-  Context_Pat |
-  Context_Decl
-  deriving (Show)
+data TypeExtension =
+  TypeExtension_Record Bool [(String, [TypeAST])]
 
-newtype TypeAST =
-  TypeAST (GeneralAST RecordType)
-
-type TypeASF =
-  [TypeAST]
-
-type RecordType =
-  [(String, TypeASF)]
 
 newtype ExpAST =
   ExpAST (GeneralAST RecordExp)
 
-type ExpASF =
-  [ExpAST]
-
 type RecordExp =
   [(String, Maybe ExpAST)]
 
+
 newtype PatAST =
   PatAST (GeneralAST RecordPat)
-
-type PatASF =
-  [PatAST]
 
 type RecordPat =
   [(String, Maybe PatAST)]

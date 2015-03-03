@@ -23,7 +23,7 @@ type Process =
 
 parsePlaceholders :: String -> Process [PlaceholderAST]
 parsePlaceholders code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many Parsing.placeholderAST)) name code
+  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.generalAST Parsing.placeholder))) name code
 
 -- |
 -- Detect contexts of all top-level record splices.

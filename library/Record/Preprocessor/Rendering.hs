@@ -34,3 +34,13 @@ qualifiedIdent :: QualifiedIdent -> String
 qualifiedIdent (ns, n) =
   foldMap (<> ".") ns <> n
 
+typeExtension :: TypeExtension -> String
+typeExtension =
+  \case
+    TypeExtension_Record strict fields ->
+      (if strict then "StrictRecord" else "LazyRecord") <> show (length fields) <> " " <>
+      intercalate " " (map renderField fields)
+      where
+        renderField (name, asts) =
+          "\"" <> name <> "\" " <> foldMap (generalAST typeExtension) asts
+

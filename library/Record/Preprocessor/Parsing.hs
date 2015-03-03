@@ -93,26 +93,6 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * TypeAST
--------------------------
-
-typeAST :: Parse TypeAST
-typeAST =
-  TypeAST <$> generalAST recordType
-
-recordType :: Parse RecordType
-recordType =
-  char '{' *> skipMany space *> sepBy1 field sep <* end
-  where
-    field =
-      (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-              manyTill typeAST (try (lookAhead (sep <|> end)))
-    sep =
-      skipMany space <* char ',' <* skipMany space
-    end =
-      skipMany space <* char '}'
-
-
 -- * GeneralAST
 -------------------------
 
@@ -133,11 +113,33 @@ generalAST injection =
 -- *
 -------------------------
 
-placeholderAST :: Parse PlaceholderAST
-placeholderAST =
-  generalAST $ 
-    (try (Placeholder_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-    (try (Placeholder_InStrictBraces <$> between (string "(!") (string "!)")))
+placeholder :: Parse Placeholder
+placeholder =
+  (try (Placeholder_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+  (try (Placeholder_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill placeholderAST (try closing)
+      opening *> manyTill (generalAST placeholder) (try closing)
+
+
+-- * TypeAST
+-------------------------
+
+typeExtension :: Parse TypeExtension
+typeExtension =
+  try (record True) <|> (record False)
+  where
+    record strict =
+      fmap (TypeExtension_Record strict) $
+      string opening *> skipMany space *> sepBy1 field sep <* end
+      where
+        (opening, closing) = 
+          if strict then ("(!", "!)") else ("(~", "~)")
+        field =
+          (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
+                  manyTill (generalAST typeExtension) (try (lookAhead (sep <|> end)))
+        sep =
+          skipMany space <* char ',' <* skipMany space
+        end =
+          skipMany space <* string closing
+
