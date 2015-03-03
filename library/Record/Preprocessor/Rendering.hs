@@ -4,21 +4,22 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-placeholderASTUsingPlaceholders :: PlaceholderAST -> String
-placeholderASTUsingPlaceholders =
+placeholder :: Placeholder -> String
+placeholder =
   \case
-    PlaceholderAST_InCurlies _ _ -> "Ъ"
-    PlaceholderAST_StringLit x   -> stringLit x
-    PlaceholderAST_QuasiQuote x  -> quasiQuote x
-    PlaceholderAST_Char x        -> return x
+    Placeholder_InLazyBraces x -> "(~" <> foldMap (generalAST placeholder) x <> "~)"
+    Placeholder_InStrictBraces x -> "(!" <> foldMap (generalAST placeholder) x <> "!)"
 
-placeholderAST :: PlaceholderAST -> String
-placeholderAST =
+generalAST :: (a -> String) -> GeneralAST a -> String
+generalAST injection =
   \case
-    PlaceholderAST_InCurlies _ x -> "{" <> foldMap placeholderAST x <> "}"
-    PlaceholderAST_StringLit x   -> stringLit x
-    PlaceholderAST_QuasiQuote x  -> quasiQuote x
-    PlaceholderAST_Char x        -> return x
+    GeneralAST_Injection x -> injection x
+    GeneralAST_StringLit x -> stringLit x
+    GeneralAST_QuasiQuote x -> quasiQuote x
+    GeneralAST_InCurlies x -> "{" <> foldMap (generalAST injection) x <> "}"
+    GeneralAST_InRoundies x -> "(" <> foldMap (generalAST injection) x <> ")"
+    GeneralAST_InSquarelies x -> "[" <> foldMap (generalAST injection) x <> "]"
+    GeneralAST_Char x -> return x
 
 stringLit :: String -> String
 stringLit =

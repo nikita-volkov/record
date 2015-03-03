@@ -8,8 +8,11 @@ import qualified Record.Preprocessor.HSE as HSE
 
 
 process :: String -> String -> Either Error String
-process =
-  undefined
+process name code =
+  flip runReaderT name $ do
+    asts <- parsePlaceholders code
+    contexts <- reifyPlaceholderContexts asts
+    undefined
 
 type Error =
   (CursorOffset, String)
@@ -26,16 +29,16 @@ parsePlaceholders code =
 -- Detect contexts of all top-level record splices.
 reifyPlaceholderContexts :: [PlaceholderAST] -> Process [Context]
 reifyPlaceholderContexts l =
-  case HSE.reifyContexts HSE.Mode_Module $ foldMap Rendering.placeholderASTUsingPlaceholders l of
+  case HSE.reifyContexts HSE.Mode_Module $ foldMap (Rendering.generalAST (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap Rendering.placeholderAST $
+      foldMap (Rendering.generalAST Rendering.placeholder) $
       catMaybes $
       flip evalState mempty $ forM l $ \ast -> do
-        modify $ (<> ((stringCursorOffset . Rendering.placeholderASTUsingPlaceholders) ast))
+        modify $ (<> ((stringCursorOffset . Rendering.generalAST (const "Ѣ")) ast))
         o' <- get
         if o' < o
           then return $ Just ast

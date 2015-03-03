@@ -17,18 +17,34 @@ instance Monoid CursorOffset where
       else CursorOffset (l1 + l2) c2
 
 
-data PlaceholderAST =
-  PlaceholderAST_InCurlies CursorOffset [PlaceholderAST] |
-  PlaceholderAST_StringLit String |
-  PlaceholderAST_QuasiQuote QuasiQuote |
-  PlaceholderAST_Char Char
-  deriving (Show)
-
 type QuasiQuote =
   (QualifiedIdent, String)
 
 type QualifiedIdent =
   ([String], String)
+
+
+-- |
+-- The most general Haskell syntax tree abstraction,
+-- which allows to parse an injected syntax without breaking contexts.
+data GeneralAST a =
+  GeneralAST_Injection a |
+  GeneralAST_StringLit String |
+  GeneralAST_QuasiQuote QuasiQuote |
+  GeneralAST_InCurlies [GeneralAST a] |
+  GeneralAST_InRoundies [GeneralAST a] |
+  GeneralAST_InSquarelies [GeneralAST a] |
+  GeneralAST_Char Char
+  deriving (Show)
+
+
+type PlaceholderAST =
+  GeneralAST Placeholder
+
+data Placeholder =
+  Placeholder_InLazyBraces [PlaceholderAST] |
+  Placeholder_InStrictBraces [PlaceholderAST]
+  deriving (Show)
 
 
 
@@ -65,16 +81,5 @@ type PatASF =
 
 type RecordPat =
   [(String, Maybe PatAST)]
-
--- |
--- The most general Haskell syntax tree abstraction,
--- which allows to parse an injected syntax without breaking contexts.
-data GeneralAST a =
-  GeneralAST_Injection a |
-  GeneralAST_StringLit String |
-  GeneralAST_QuasiQuote QuasiQuote |
-  GeneralAST_InRoundies [GeneralAST a] |
-  GeneralAST_InSquarelies [GeneralAST a] |
-  GeneralAST_Char Char
 
 

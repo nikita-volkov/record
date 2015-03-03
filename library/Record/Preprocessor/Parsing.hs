@@ -93,20 +93,6 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * PlaceholderAST
--------------------------
-
-placeholderAST :: Parse PlaceholderAST
-placeholderAST =
-  (try $ PlaceholderAST_StringLit <$> stringLit) <|>
-  (try $ PlaceholderAST_QuasiQuote <$> quasiQuote) <|>
-  (try $ PlaceholderAST_InCurlies <$> cursorOffset <*> asfBetween '{' '}') <|>
-  (PlaceholderAST_Char <$> anyChar)
-  where
-    asfBetween opening closing =
-      char opening *> manyTill placeholderAST (try (char closing))
-
-
 -- * TypeAST
 -------------------------
 
@@ -135,9 +121,23 @@ generalAST injection =
   (try $ GeneralAST_Injection <$> injection) <|>
   (try $ GeneralAST_StringLit <$> stringLit) <|>
   (try $ GeneralAST_QuasiQuote <$> quasiQuote) <|>
+  (try $ GeneralAST_InCurlies <$> enclosedIn '{' '}') <|>
   (try $ GeneralAST_InRoundies <$> enclosedIn '(' ')') <|>
   (try $ GeneralAST_InSquarelies <$> enclosedIn '[' ']') <|>
   (GeneralAST_Char <$> anyChar)
   where
     enclosedIn opening closing =
       char opening *> manyTill (generalAST injection) (try (char closing))
+
+
+-- *
+-------------------------
+
+placeholderAST :: Parse PlaceholderAST
+placeholderAST =
+  generalAST $ 
+    (try (Placeholder_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+    (try (Placeholder_InStrictBraces <$> between (string "(!") (string "!)")))
+  where
+    between opening closing =
+      opening *> manyTill placeholderAST (try closing)
