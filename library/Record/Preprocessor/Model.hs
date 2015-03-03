@@ -61,17 +61,17 @@ data TypeExtension =
   TypeExtension_Record Bool [(String, [TypeAST])]
 
 
-newtype ExpAST =
-  ExpAST (GeneralAST RecordExp)
+type ExpAST =
+  GeneralAST ExpExtension
 
-type RecordExp =
-  [(String, Maybe ExpAST)]
+data ExpExtension =
+  ExpExtension_Record Bool [(String, Maybe [ExpAST])]
 
 
-newtype PatAST =
-  PatAST (GeneralAST RecordPat)
+type PatAST =
+  GeneralAST PatExtension
 
-type RecordPat =
-  [(String, Maybe PatAST)]
+data PatExtension =
+  PatExtension_Record Bool [Either String [PatAST]]
 
 

@@ -143,3 +143,49 @@ typeExtension =
         end =
           skipMany space <* string closing
 
+
+-- * Expression
+-------------------------
+
+expExtension :: Parse ExpExtension
+expExtension =
+  try (record True) <|> (record False)
+  where
+    record strict =
+      fmap (ExpExtension_Record strict) $
+      string opening *> skipMany space *> sepBy1 (try assignment <|> placeholder) sep <* end
+      where
+        (opening, closing) = 
+          if strict then ("(!", "!)") else ("(~", "~)")
+        assignment =
+          (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
+                  (Just <$> manyTill (generalAST expExtension) (try (lookAhead (sep <|> end))))
+        placeholder =
+          (,) <$> lowerCaseIdent <*> pure Nothing
+        sep =
+          skipMany space <* char ',' <* skipMany space
+        end =
+          skipMany space <* string closing
+
+
+-- * Pattern
+-------------------------
+
+patExtension :: Parse PatExtension
+patExtension =
+  try (record True) <|> (record False)
+  where
+    record strict =
+      fmap (PatExtension_Record strict) $
+      string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) sep <* end
+      where
+        (opening, closing) = 
+          if strict then ("(!", "!)") else ("(~", "~)")
+        asts =
+          manyTill (generalAST patExtension) (try (lookAhead (sep <|> end)))
+        sep =
+          skipMany space <* char ',' <* skipMany space
+        end =
+          skipMany space <* string closing
+
+
