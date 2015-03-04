@@ -52,17 +52,21 @@ data AmbiguousAST =
 
 data TypeAST =
   TypeAST_Record Bool [(String, [DecontextedAST TypeAST])]
+  deriving (Show)
 
 
 data ExpAST a =
   ExpAST_Record Bool (RecordExpBody a)
+  deriving (Show, Functor)
 
 data RecordExpBody a =
   RecordExpBody_Positional [Maybe [DecontextedAST a]] |
   RecordExpBody_Named [(String, Maybe [DecontextedAST a])]
+  deriving (Show, Functor)
 
 
 data PatAST =
   PatAST_Record Bool [Either String [DecontextedAST PatAST]]
+  deriving (Show)
 
 
