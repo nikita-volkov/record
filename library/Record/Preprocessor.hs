@@ -11,7 +11,7 @@ process :: String -> String -> Either Error String
 process name code =
   flip runReaderT name $ do
     asts <- parseAmbiguousASTs code
-    contexts <- reifyAmbiguousASTContexts asts
+    levels <- reifyAmbiguousASTLevels asts
     undefined
 
 type Error =
@@ -26,10 +26,10 @@ parseAmbiguousASTs code =
   ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontextedAST Parsing.ambiguousAST))) name code
 
 -- |
--- Detect contexts of all top-level record splices.
-reifyAmbiguousASTContexts :: [DecontextedAST AmbiguousAST] -> Process [Context]
-reifyAmbiguousASTContexts l =
-  case HSE.reifyContexts HSE.Mode_Module $ foldMap (Rendering.decontextedAST (const "Ѣ")) l of
+-- Detect levels of all top-level record splices.
+reifyAmbiguousASTLevels :: [DecontextedAST AmbiguousAST] -> Process [Level]
+reifyAmbiguousASTLevels l =
+  case HSE.reifyLevels HSE.Mode_Module $ foldMap (Rendering.decontextedAST (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where

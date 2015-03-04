@@ -1,34 +1,34 @@
 -- |
 -- Aggregation of a list of associations.
-module Record.Preprocessor.HSE.Contexts where
+module Record.Preprocessor.HSE.Levels where
 
 import Record.Prelude hiding (exp, bracket)
 import Record.Preprocessor.Model
 import qualified Language.Haskell.Exts as E
 
 
-type Contexts =
-  [Context]
+type Levels =
+  [Level]
 
-module_ :: E.Module -> Contexts
+module_ :: E.Module -> Levels
 module_ (E.Module _ _ _ _ _ _ decls) =
   foldMap decl decls
 
-decl :: E.Decl -> Contexts
+decl :: E.Decl -> Levels
 decl = 
   \case
     E.TypeDecl _ _ _ t -> type_ t
     E.TypeFamDecl {} -> mempty
     E.ClosedTypeFamDecl _ _ _ _ tl -> foldMap typeEqn tl
-    E.DataDecl _ _ c _ _ q d -> context c <> foldMap qualConDecl q <> foldMap deriving_ d
-    E.GDataDecl _ _ c _ _ _ g d -> context c <> foldMap gadtDecl g <> foldMap deriving_ d
-    E.DataFamDecl _ c _ _ _ -> context c
+    E.DataDecl _ _ c _ _ q d -> level c <> foldMap qualConDecl q <> foldMap deriving_ d
+    E.GDataDecl _ _ c _ _ _ g d -> level c <> foldMap gadtDecl g <> foldMap deriving_ d
+    E.DataFamDecl _ c _ _ _ -> level c
     E.TypeInsDecl _ t1 t2 -> type_ t1 <> type_ t2
     E.DataInsDecl _ _ t q d -> type_ t <> foldMap qualConDecl q <> foldMap deriving_ d
     E.GDataInsDecl _ _ t _ g d -> type_ t <> foldMap gadtDecl g <> foldMap deriving_ d
-    E.ClassDecl _ c _ _ _ cd -> context c <> foldMap classDecl cd
-    E.InstDecl _ _ _ c _ tl idl -> context c <> foldMap type_ tl <> foldMap instDecl idl
-    E.DerivDecl _ _ _ c _ tl -> context c <> foldMap type_ tl
+    E.ClassDecl _ c _ _ _ cd -> level c <> foldMap classDecl cd
+    E.InstDecl _ _ _ c _ tl idl -> level c <> foldMap type_ tl <> foldMap instDecl idl
+    E.DerivDecl _ _ _ c _ tl -> level c <> foldMap type_ tl
     E.InfixDecl {} -> mempty
     E.DefaultDecl _ tl -> foldMap type_ tl
     E.SpliceDecl _ e -> exp e
@@ -44,36 +44,36 @@ decl =
     E.InlineConlikeSig {} -> mempty
     E.SpecSig _ _ _ tl -> foldMap type_ tl
     E.SpecInlineSig _ _ _ _ tl -> foldMap type_ tl
-    E.InstSig _ _ c _ tl -> context c <> foldMap type_ tl
+    E.InstSig _ _ c _ tl -> level c <> foldMap type_ tl
     E.AnnPragma {} -> mempty
     E.MinimalPragma {} -> mempty
 
-rule :: E.Rule -> Contexts
+rule :: E.Rule -> Levels
 rule =
   \(E.Rule _ _ rvm e1 e2) -> (foldMap . foldMap) ruleVar rvm <> exp e1 <> exp e2
 
-ruleVar :: E.RuleVar -> Contexts
+ruleVar :: E.RuleVar -> Levels
 ruleVar =
   \case
     E.RuleVar _ -> mempty
     E.TypedRuleVar _ t -> type_ t
 
-match :: E.Match -> Contexts
+match :: E.Match -> Levels
 match =
   \(E.Match _ _ pl tm r b) ->
     foldMap pat pl <> foldMap type_ tm <> rhs r <> binds b
 
-rhs :: E.Rhs -> Contexts
+rhs :: E.Rhs -> Levels
 rhs =
   \case
     E.UnGuardedRhs e -> exp e
     E.GuardedRhss gl -> foldMap guardedRhs gl
 
-guardedRhs :: E.GuardedRhs -> Contexts
+guardedRhs :: E.GuardedRhs -> Levels
 guardedRhs =
   \(E.GuardedRhs _ sl e) -> foldMap stmt sl <> exp e
 
-instDecl :: E.InstDecl -> Contexts
+instDecl :: E.InstDecl -> Levels
 instDecl =
   \case
     E.InsDecl d -> decl d
@@ -81,49 +81,49 @@ instDecl =
     E.InsData _ _ t qcdl dl -> type_ t <> foldMap qualConDecl qcdl <> foldMap deriving_ dl
     E.InsGData _ _ t _ gdl dl -> type_ t <> foldMap gadtDecl gdl <> foldMap deriving_ dl
 
-classDecl :: E.ClassDecl -> Contexts
+classDecl :: E.ClassDecl -> Levels
 classDecl =
   \case
     E.ClsDecl d -> decl d
-    E.ClsDataFam _ c _ _ _ -> context c
+    E.ClsDataFam _ c _ _ _ -> level c
     E.ClsTyFam _ _ _ _ -> mempty
     E.ClsTyDef _ t1 t2 -> type_ t1 <> type_ t2
     E.ClsDefSig _ _ t -> type_ t
 
-gadtDecl :: E.GadtDecl -> Contexts
+gadtDecl :: E.GadtDecl -> Levels
 gadtDecl =
   \(E.GadtDecl _ _ pl t) -> foldMap (type_ . snd) pl <> type_ t
 
-qualConDecl :: E.QualConDecl -> Contexts
+qualConDecl :: E.QualConDecl -> Levels
 qualConDecl =
-  \(E.QualConDecl _ _ c cd) -> context c <> conDecl cd
+  \(E.QualConDecl _ _ c cd) -> level c <> conDecl cd
 
-conDecl :: E.ConDecl -> Contexts
+conDecl :: E.ConDecl -> Levels
 conDecl =
   \case
     E.ConDecl _ tl -> foldMap type_ tl
     E.InfixConDecl t1 _ t2 -> type_ t1 <> type_ t2
     E.RecDecl {} -> error "Unexpected record declaration"
 
-typeEqn :: E.TypeEqn -> Contexts
+typeEqn :: E.TypeEqn -> Levels
 typeEqn =
   \(E.TypeEqn t1 t2) -> type_ t1 <> type_ t2
 
-deriving_ :: E.Deriving -> Contexts
+deriving_ :: E.Deriving -> Levels
 deriving_ =
   \(_, tl) -> foldMap type_ tl
 
-type_ :: E.Type -> Contexts
+type_ :: E.Type -> Levels
 type_ =
   \case
-    E.TyForall _ c t -> context c <> type_ t
+    E.TyForall _ c t -> level c <> type_ t
     E.TyFun t1 t2 -> type_ t1 <> type_ t2
     E.TyTuple _ tl -> foldMap type_ tl
     E.TyList t -> type_ t
     E.TyParArray t -> type_ t
     E.TyApp t1 t2 -> type_ t1 <> type_ t2
     E.TyVar _ -> mempty
-    E.TyCon n -> qName Context_Type n
+    E.TyCon n -> qName Level_Type n
     E.TyParen t -> type_ t
     E.TyInfix t1 _ t2 -> type_ t1 <> type_ t2
     E.TyKind t _ -> type_ t
@@ -132,11 +132,11 @@ type_ =
     E.TySplice s -> splice s
     E.TyBang _ t -> type_ t
 
-context :: E.Context -> Contexts
-context =
+level :: E.Context -> Levels
+level =
   foldMap asst
 
-asst :: E.Asst -> Contexts
+asst :: E.Asst -> Levels
 asst =
   \case
     E.ClassA _ tl -> foldMap type_ tl
@@ -146,31 +146,31 @@ asst =
     E.EqualP t1 t2 -> type_ t1 <> type_ t2
     E.ParenA a -> asst a
 
-qName :: Context -> E.QName -> Contexts
+qName :: Level -> E.QName -> Levels
 qName c =
   \case
     E.UnQual n -> name c n
     _ -> mempty
 
-name :: Context -> E.Name -> Contexts
+name :: Level -> E.Name -> Levels
 name c =
   \case
     E.Ident "Ъ" -> pure c
     E.Symbol "Ъ" -> pure c
     _ -> empty
 
-splice :: E.Splice -> Contexts
+splice :: E.Splice -> Levels
 splice =
   \case
     E.IdSplice _ -> mempty
     E.ParenSplice e -> exp e
 
-exp :: E.Exp -> Contexts
+exp :: E.Exp -> Levels
 exp =
   \case
     E.Var _ -> mempty
     E.IPVar _ -> mempty
-    E.Con q -> qName Context_Exp q
+    E.Con q -> qName Level_Exp q
     E.Lit _ -> mempty
     E.InfixApp e1 _ e2 -> exp e1 <> exp e2
     E.App e1 e2 -> exp e1 <> exp e2
@@ -221,7 +221,7 @@ exp =
     E.RightArrHighApp e1 e2 -> exp e1 <> exp e2
     E.LCase al -> foldMap alt al
 
-bracket :: E.Bracket -> Contexts
+bracket :: E.Bracket -> Levels
 bracket =
   \case
     E.ExpBracket e -> exp e
@@ -229,7 +229,7 @@ bracket =
     E.TypeBracket t -> type_ t
     E.DeclBracket dl -> foldMap decl dl
 
-qualStmt :: E.QualStmt -> Contexts
+qualStmt :: E.QualStmt -> Levels
 qualStmt =
   \case
     E.QualStmt s -> stmt s
@@ -239,19 +239,19 @@ qualStmt =
     E.GroupUsing e -> exp e
     E.GroupByUsing e1 e2 -> exp e1 <> exp e2
 
-alt :: E.Alt -> Contexts
+alt :: E.Alt -> Levels
 alt =
   \case
     E.Alt _ p r b -> pat p <> rhs r <> binds b
 
-pat :: E.Pat -> Contexts
+pat :: E.Pat -> Levels
 pat =
   \case
     E.PVar _ -> mempty
     E.PLit _ _ -> mempty
     E.PNPlusK _ _ -> mempty
     E.PInfixApp p1 _ p2 -> pat p1 <> pat p2
-    E.PApp q pl -> qName Context_Pat q <> foldMap pat pl
+    E.PApp q pl -> qName Level_Pat q <> foldMap pat pl
     E.PTuple _ pl -> foldMap pat pl
     E.PList pl -> foldMap pat pl
     E.PParen p -> pat p
@@ -270,7 +270,7 @@ pat =
     E.PQuasiQuote _ _ -> mempty
     E.PBangPat p -> pat p
 
-rPat :: E.RPat -> Contexts
+rPat :: E.RPat -> Levels
 rPat =
   \case
     E.RPOp r _ -> rPat r
@@ -282,7 +282,7 @@ rPat =
     E.RPParen r -> rPat r
     E.RPPat p -> pat p
 
-stmt :: E.Stmt -> Contexts
+stmt :: E.Stmt -> Levels
 stmt =
   \case
     E.Generator _ p e -> pat p <> exp e
@@ -290,13 +290,13 @@ stmt =
     E.LetStmt b -> binds b
     E.RecStmt sl -> foldMap stmt sl
 
-binds :: E.Binds -> Contexts
+binds :: E.Binds -> Levels
 binds =
   \case
     E.BDecls dl -> foldMap decl dl
     E.IPBinds il -> foldMap ipBind il
 
-ipBind :: E.IPBind -> Contexts
+ipBind :: E.IPBind -> Levels
 ipBind =
   \case
     E.IPBind _ _ e -> exp e

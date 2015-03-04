@@ -3,11 +3,11 @@ module Record.Preprocessor.Model where
 import Record.Prelude
 
 
-data Context =
-  Context_Type |
-  Context_Exp |
-  Context_Pat |
-  Context_Decl
+data Level =
+  Level_Type |
+  Level_Exp |
+  Level_Pat |
+  Level_Decl
   deriving (Show)
 
 
@@ -70,3 +70,8 @@ data PatAST =
   deriving (Show)
 
 
+data AST =
+  AST_Type TypeAST |
+  AST_Exp (ExpAST AST) |
+  AST_Pat PatAST
+  deriving (Show)

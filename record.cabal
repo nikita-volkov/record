@@ -63,10 +63,10 @@ library
   other-modules:
     Record.Preprocessor.Model
     Record.Preprocessor.Parsing
-    Record.Preprocessor.ContextAwareParsing
+    Record.Preprocessor.LevelAwareParsing
     Record.Preprocessor.Rendering
     Record.Preprocessor.HSE
-    Record.Preprocessor.HSE.Contexts
+    Record.Preprocessor.HSE.Levels
   exposed-modules:
     Record.Types
     Record.Lens

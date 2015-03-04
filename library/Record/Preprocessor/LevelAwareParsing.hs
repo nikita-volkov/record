@@ -1,4 +1,4 @@
-module Record.Preprocessor.ContextAwareParsing where
+module Record.Preprocessor.LevelAwareParsing where
 
 import Record.Prelude hiding (takeWhile, exp, try, many)
 import Record.Preprocessor.Model
@@ -6,12 +6,12 @@ import qualified Record.Preprocessor.Parsing as Parsing
 
 
 type Parse = 
-  StateT [Context] Parsing.Parse
+  StateT [Level] Parsing.Parse
 
-run :: Parse a -> [Context] -> Parsing.Parse a
+run :: Parse a -> [Level] -> Parsing.Parse a
 run =
   undefined
 
-fetchContext :: Parse (Maybe Context)
-fetchContext =
+fetchLevel :: Parse (Maybe Level)
+fetchLevel =
   state $ uncons >>> maybe (Nothing, []) (Just *** id)
