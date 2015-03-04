@@ -93,21 +93,21 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * GeneralAST
+-- * DecontextedAST
 -------------------------
 
-generalAST :: Parse a -> Parse (GeneralAST a)
-generalAST injection =
-  (try $ GeneralAST_Injection <$> injection) <|>
-  (try $ GeneralAST_StringLit <$> stringLit) <|>
-  (try $ GeneralAST_QuasiQuote <$> quasiQuote) <|>
-  (try $ GeneralAST_InCurlies <$> enclosedIn '{' '}') <|>
-  (try $ GeneralAST_InRoundies <$> enclosedIn '(' ')') <|>
-  (try $ GeneralAST_InSquarelies <$> enclosedIn '[' ']') <|>
-  (GeneralAST_Char <$> anyChar)
+decontextedAST :: Parse a -> Parse (DecontextedAST a)
+decontextedAST injection =
+  (try $ DecontextedAST_Injection <$> injection) <|>
+  (try $ DecontextedAST_StringLit <$> stringLit) <|>
+  (try $ DecontextedAST_QuasiQuote <$> quasiQuote) <|>
+  (try $ DecontextedAST_InCurlies <$> enclosedIn '{' '}') <|>
+  (try $ DecontextedAST_InRoundies <$> enclosedIn '(' ')') <|>
+  (try $ DecontextedAST_InSquarelies <$> enclosedIn '[' ']') <|>
+  (DecontextedAST_Char <$> anyChar)
   where
     enclosedIn opening closing =
-      char opening *> manyTill (generalAST injection) (try (char closing))
+      char opening *> manyTill (decontextedAST injection) (try (char closing))
 
 
 -- *
@@ -119,10 +119,10 @@ placeholder =
   (try (Placeholder_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (generalAST placeholder) (try closing)
+      opening *> manyTill (decontextedAST placeholder) (try closing)
 
 
--- * TypeAST
+-- * DecontextedAST TypeExtension
 -------------------------
 
 typeExtension :: Parse TypeExtension
@@ -137,7 +137,7 @@ typeExtension =
           if strict then ("(!", "!)") else ("(~", "~)")
         field =
           (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-                  manyTill (generalAST typeExtension) (try (lookAhead (sep <|> end)))
+                  manyTill (decontextedAST typeExtension) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
@@ -174,7 +174,7 @@ expExtension =
                 placeholder =
                   (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (generalAST expExtension) (try (lookAhead (sep <|> end)))
+              manyTill (decontextedAST expExtension) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern
@@ -191,7 +191,7 @@ patExtension =
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         asts =
-          manyTill (generalAST patExtension) (try (lookAhead (sep <|> end)))
+          manyTill (decontextedAST patExtension) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =

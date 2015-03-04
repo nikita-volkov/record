@@ -21,24 +21,24 @@ type Process =
   ReaderT String (Either Error)
 
 
-parsePlaceholders :: String -> Process [PlaceholderAST]
+parsePlaceholders :: String -> Process [DecontextedAST Placeholder]
 parsePlaceholders code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.generalAST Parsing.placeholder))) name code
+  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontextedAST Parsing.placeholder))) name code
 
 -- |
 -- Detect contexts of all top-level record splices.
-reifyPlaceholderContexts :: [PlaceholderAST] -> Process [Context]
+reifyPlaceholderContexts :: [DecontextedAST Placeholder] -> Process [Context]
 reifyPlaceholderContexts l =
-  case HSE.reifyContexts HSE.Mode_Module $ foldMap (Rendering.generalAST (const "Ѣ")) l of
+  case HSE.reifyContexts HSE.Mode_Module $ foldMap (Rendering.decontextedAST (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.generalAST Rendering.placeholder) $
+      foldMap (Rendering.decontextedAST Rendering.placeholder) $
       catMaybes $
       flip evalState mempty $ forM l $ \ast -> do
-        modify $ (<> ((stringCursorOffset . Rendering.generalAST (const "Ѣ")) ast))
+        modify $ (<> ((stringCursorOffset . Rendering.decontextedAST (const "Ѣ")) ast))
         o' <- get
         if o' < o
           then return $ Just ast
