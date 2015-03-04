@@ -65,7 +65,11 @@ type ExpAST =
   GeneralAST ExpExtension
 
 data ExpExtension =
-  ExpExtension_Record Bool [(String, Maybe [ExpAST])]
+  ExpExtension_Record Bool RecordExpBody
+
+data RecordExpBody =
+  RecordExpBody_Positional [Maybe [ExpAST]] |
+  RecordExpBody_Named [(String, Maybe [ExpAST])]
 
 
 type PatAST =

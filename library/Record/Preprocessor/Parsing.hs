@@ -153,19 +153,28 @@ expExtension =
   where
     record strict =
       fmap (ExpExtension_Record strict) $
-      string opening *> skipMany space *> sepBy1 (try assignment <|> placeholder) sep <* end
+      string opening *> skipMany space *> body <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
-        assignment =
-          (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
-                  (Just <$> manyTill (generalAST expExtension) (try (lookAhead (sep <|> end))))
-        placeholder =
-          (,) <$> lowerCaseIdent <*> pure Nothing
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
           skipMany space <* string closing
+        body =
+          named
+          where
+            named =
+              RecordExpBody_Named <$>
+              sepBy1 (try assignment <|> placeholder) sep
+              where
+                assignment =
+                  (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
+                          (Just <$> asts)
+                placeholder =
+                  (,) <$> lowerCaseIdent <*> pure Nothing
+            asts =
+              manyTill (generalAST expExtension) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern

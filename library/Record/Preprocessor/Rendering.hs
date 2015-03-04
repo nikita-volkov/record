@@ -44,3 +44,26 @@ typeExtension =
         renderField (name, asts) =
           "\"" <> name <> "\" " <> foldMap (generalAST typeExtension) asts
 
+expExtension :: ExpExtension -> String
+expExtension =
+  \case
+    ExpExtension_Record strict (RecordExpBody_Named sections) ->
+      flip evalState 0 $ do
+        sectionStrings <-
+          forM sortedSections $ \(name, asts) -> case asts of
+            Nothing -> do
+              modify succ
+              fmap varName get
+            Just asts -> return $ "(" <> foldMap (generalAST expExtension) asts <> ")"
+        numArgs <- get
+        let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
+                  " " <> intercalate " " sectionStrings
+        case numArgs of
+          0 -> return $ exp
+          n -> return $ "\\" <> intercalate " " (map varName [1 .. numArgs]) <> " -> " <> exp
+      where
+        varName n = 
+          "ѣ" <> show n
+        sortedSections =
+          sortWith fst sections
+
