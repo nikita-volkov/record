@@ -44,8 +44,8 @@ typeAST =
         renderField (name, asts) =
           "\"" <> name <> "\" " <> foldMap (decontextedAST typeAST) asts
 
-expAST :: ExpAST -> String
-expAST =
+expAST :: (a -> String) -> ExpAST a -> String
+expAST inner =
   \case
     ExpAST_Record strict (RecordExpBody_Named sections) ->
       flip evalState 0 $ do
@@ -54,7 +54,7 @@ expAST =
             Nothing -> do
               modify succ
               fmap varName get
-            Just asts -> return $ "(" <> foldMap (decontextedAST expAST) asts <> ")"
+            Just asts -> return $ "(" <> foldMap (decontextedAST inner) asts <> ")"
         numArgs <- get
         let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
                   " " <> intercalate " " sectionStrings

@@ -54,12 +54,12 @@ data TypeAST =
   TypeAST_Record Bool [(String, [DecontextedAST TypeAST])]
 
 
-data ExpAST =
-  ExpAST_Record Bool RecordExpBody
+data ExpAST a =
+  ExpAST_Record Bool (RecordExpBody a)
 
-data RecordExpBody =
-  RecordExpBody_Positional [Maybe [DecontextedAST ExpAST]] |
-  RecordExpBody_Named [(String, Maybe [DecontextedAST ExpAST])]
+data RecordExpBody a =
+  RecordExpBody_Positional [Maybe [DecontextedAST a]] |
+  RecordExpBody_Named [(String, Maybe [DecontextedAST a])]
 
 
 data PatAST =

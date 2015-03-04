@@ -147,7 +147,7 @@ typeAST =
 -- * Expression
 -------------------------
 
-expAST :: Parse ExpAST
+expAST :: Parse (ExpAST AmbiguousAST)
 expAST =
   try (record True) <|> (record False)
   where
@@ -174,7 +174,7 @@ expAST =
                 placeholder =
                   (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontextedAST expAST) (try (lookAhead (sep <|> end)))
+              manyTill (decontextedAST ambiguousAST) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern
