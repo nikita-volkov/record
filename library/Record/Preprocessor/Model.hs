@@ -32,50 +32,37 @@ type QualifiedIdent =
 
 
 -- |
--- The most general Haskell syntax tree abstraction,
--- which allows to parse an injected syntax without breaking contexts.
-data GeneralAST a =
-  GeneralAST_Injection a |
-  GeneralAST_StringLit String |
-  GeneralAST_QuasiQuote QuasiQuote |
-  GeneralAST_InCurlies [GeneralAST a] |
-  GeneralAST_InRoundies [GeneralAST a] |
-  GeneralAST_InSquarelies [GeneralAST a] |
-  GeneralAST_Char Char
+-- An AST with disambiguated contexts and an interspersed extension type.
+data DecontextedAST a =
+  DecontextedAST_Injection a |
+  DecontextedAST_StringLit String |
+  DecontextedAST_QuasiQuote QuasiQuote |
+  DecontextedAST_InCurlies [DecontextedAST a] |
+  DecontextedAST_InRoundies [DecontextedAST a] |
+  DecontextedAST_InSquarelies [DecontextedAST a] |
+  DecontextedAST_Char Char
   deriving (Show, Functor)
 
 
-type PlaceholderAST =
-  GeneralAST Placeholder
-
-data Placeholder =
-  Placeholder_InLazyBraces [PlaceholderAST] |
-  Placeholder_InStrictBraces [PlaceholderAST]
+data AmbiguousAST =
+  AmbiguousAST_InLazyBraces [DecontextedAST AmbiguousAST] |
+  AmbiguousAST_InStrictBraces [DecontextedAST AmbiguousAST]
   deriving (Show)
 
 
-type TypeAST =
-  GeneralAST TypeExtension
-
-data TypeExtension =
-  TypeExtension_Record Bool [(String, [TypeAST])]
+data TypeAST =
+  TypeAST_Record Bool [(String, [DecontextedAST TypeAST])]
 
 
-type ExpAST =
-  GeneralAST ExpExtension
-
-data ExpExtension =
-  ExpExtension_Record Bool RecordExpBody
+data ExpAST =
+  ExpAST_Record Bool RecordExpBody
 
 data RecordExpBody =
-  RecordExpBody_Positional [Maybe [ExpAST]] |
-  RecordExpBody_Named [(String, Maybe [ExpAST])]
+  RecordExpBody_Positional [Maybe [DecontextedAST ExpAST]] |
+  RecordExpBody_Named [(String, Maybe [DecontextedAST ExpAST])]
 
 
-type PatAST =
-  GeneralAST PatExtension
-
-data PatExtension =
-  PatExtension_Record Bool [Either String [PatAST]]
+data PatAST =
+  PatAST_Record Bool [Either String [DecontextedAST PatAST]]
 
 
