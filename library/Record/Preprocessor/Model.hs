@@ -44,25 +44,25 @@ data DecontextedAST a =
   deriving (Show, Functor)
 
 
-data Placeholder =
-  Placeholder_InLazyBraces [DecontextedAST Placeholder] |
-  Placeholder_InStrictBraces [DecontextedAST Placeholder]
+data AmbiguousAST =
+  AmbiguousAST_InLazyBraces [DecontextedAST AmbiguousAST] |
+  AmbiguousAST_InStrictBraces [DecontextedAST AmbiguousAST]
   deriving (Show)
 
 
-data TypeExtension =
-  TypeExtension_Record Bool [(String, [DecontextedAST TypeExtension])]
+data TypeAST =
+  TypeAST_Record Bool [(String, [DecontextedAST TypeAST])]
 
 
-data ExpExtension =
-  ExpExtension_Record Bool RecordExpBody
+data ExpAST =
+  ExpAST_Record Bool RecordExpBody
 
 data RecordExpBody =
-  RecordExpBody_Positional [Maybe [DecontextedAST ExpExtension]] |
-  RecordExpBody_Named [(String, Maybe [DecontextedAST ExpExtension])]
+  RecordExpBody_Positional [Maybe [DecontextedAST ExpAST]] |
+  RecordExpBody_Named [(String, Maybe [DecontextedAST ExpAST])]
 
 
-data PatExtension =
-  PatExtension_Record Bool [Either String [DecontextedAST PatExtension]]
+data PatAST =
+  PatAST_Record Bool [Either String [DecontextedAST PatAST]]
 
 

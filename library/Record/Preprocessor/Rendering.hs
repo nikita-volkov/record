@@ -4,11 +4,11 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-placeholder :: Placeholder -> String
-placeholder =
+ambiguousAST :: AmbiguousAST -> String
+ambiguousAST =
   \case
-    Placeholder_InLazyBraces x -> "(~" <> foldMap (decontextedAST placeholder) x <> "~)"
-    Placeholder_InStrictBraces x -> "(!" <> foldMap (decontextedAST placeholder) x <> "!)"
+    AmbiguousAST_InLazyBraces x -> "(~" <> foldMap (decontextedAST ambiguousAST) x <> "~)"
+    AmbiguousAST_InStrictBraces x -> "(!" <> foldMap (decontextedAST ambiguousAST) x <> "!)"
 
 decontextedAST :: (a -> String) -> DecontextedAST a -> String
 decontextedAST injection =
@@ -34,27 +34,27 @@ qualifiedIdent :: QualifiedIdent -> String
 qualifiedIdent (ns, n) =
   foldMap (<> ".") ns <> n
 
-typeExtension :: TypeExtension -> String
-typeExtension =
+typeAST :: TypeAST -> String
+typeAST =
   \case
-    TypeExtension_Record strict fields ->
+    TypeAST_Record strict fields ->
       (if strict then "StrictRecord" else "LazyRecord") <> show (length fields) <> " " <>
       intercalate " " (map renderField fields)
       where
         renderField (name, asts) =
-          "\"" <> name <> "\" " <> foldMap (decontextedAST typeExtension) asts
+          "\"" <> name <> "\" " <> foldMap (decontextedAST typeAST) asts
 
-expExtension :: ExpExtension -> String
-expExtension =
+expAST :: ExpAST -> String
+expAST =
   \case
-    ExpExtension_Record strict (RecordExpBody_Named sections) ->
+    ExpAST_Record strict (RecordExpBody_Named sections) ->
       flip evalState 0 $ do
         sectionStrings <-
           forM sortedSections $ \(name, asts) -> case asts of
             Nothing -> do
               modify succ
               fmap varName get
-            Just asts -> return $ "(" <> foldMap (decontextedAST expExtension) asts <> ")"
+            Just asts -> return $ "(" <> foldMap (decontextedAST expAST) asts <> ")"
         numArgs <- get
         let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
                   " " <> intercalate " " sectionStrings

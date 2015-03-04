@@ -10,8 +10,8 @@ import qualified Record.Preprocessor.HSE as HSE
 process :: String -> String -> Either Error String
 process name code =
   flip runReaderT name $ do
-    asts <- parsePlaceholders code
-    contexts <- reifyPlaceholderContexts asts
+    asts <- parseAmbiguousASTs code
+    contexts <- reifyAmbiguousASTContexts asts
     undefined
 
 type Error =
@@ -21,21 +21,21 @@ type Process =
   ReaderT String (Either Error)
 
 
-parsePlaceholders :: String -> Process [DecontextedAST Placeholder]
-parsePlaceholders code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontextedAST Parsing.placeholder))) name code
+parseAmbiguousASTs :: String -> Process [DecontextedAST AmbiguousAST]
+parseAmbiguousASTs code =
+  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontextedAST Parsing.ambiguousAST))) name code
 
 -- |
 -- Detect contexts of all top-level record splices.
-reifyPlaceholderContexts :: [DecontextedAST Placeholder] -> Process [Context]
-reifyPlaceholderContexts l =
+reifyAmbiguousASTContexts :: [DecontextedAST AmbiguousAST] -> Process [Context]
+reifyAmbiguousASTContexts l =
   case HSE.reifyContexts HSE.Mode_Module $ foldMap (Rendering.decontextedAST (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.decontextedAST Rendering.placeholder) $
+      foldMap (Rendering.decontextedAST Rendering.ambiguousAST) $
       catMaybes $
       flip evalState mempty $ forM l $ \ast -> do
         modify $ (<> ((stringCursorOffset . Rendering.decontextedAST (const "Ѣ")) ast))

@@ -113,31 +113,31 @@ decontextedAST injection =
 -- *
 -------------------------
 
-placeholder :: Parse Placeholder
-placeholder =
-  (try (Placeholder_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-  (try (Placeholder_InStrictBraces <$> between (string "(!") (string "!)")))
+ambiguousAST :: Parse AmbiguousAST
+ambiguousAST =
+  (try (AmbiguousAST_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+  (try (AmbiguousAST_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (decontextedAST placeholder) (try closing)
+      opening *> manyTill (decontextedAST ambiguousAST) (try closing)
 
 
--- * DecontextedAST TypeExtension
+-- * DecontextedAST TypeAST
 -------------------------
 
-typeExtension :: Parse TypeExtension
-typeExtension =
+typeAST :: Parse TypeAST
+typeAST =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (TypeExtension_Record strict) $
+      fmap (TypeAST_Record strict) $
       string opening *> skipMany space *> sepBy1 field sep <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         field =
           (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-                  manyTill (decontextedAST typeExtension) (try (lookAhead (sep <|> end)))
+                  manyTill (decontextedAST typeAST) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
@@ -147,12 +147,12 @@ typeExtension =
 -- * Expression
 -------------------------
 
-expExtension :: Parse ExpExtension
-expExtension =
+expAST :: Parse ExpAST
+expAST =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (ExpExtension_Record strict) $
+      fmap (ExpAST_Record strict) $
       string opening *> skipMany space *> body <* end
       where
         (opening, closing) = 
@@ -174,24 +174,24 @@ expExtension =
                 placeholder =
                   (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontextedAST expExtension) (try (lookAhead (sep <|> end)))
+              manyTill (decontextedAST expAST) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern
 -------------------------
 
-patExtension :: Parse PatExtension
-patExtension =
+patAST :: Parse PatAST
+patAST =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (PatExtension_Record strict) $
+      fmap (PatAST_Record strict) $
       string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) sep <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         asts =
-          manyTill (decontextedAST patExtension) (try (lookAhead (sep <|> end)))
+          manyTill (decontextedAST patAST) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
