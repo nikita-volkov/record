@@ -42,7 +42,7 @@ data GeneralAST a =
   GeneralAST_InRoundies [GeneralAST a] |
   GeneralAST_InSquarelies [GeneralAST a] |
   GeneralAST_Char Char
-  deriving (Show)
+  deriving (Show, Functor)
 
 
 type PlaceholderAST =
