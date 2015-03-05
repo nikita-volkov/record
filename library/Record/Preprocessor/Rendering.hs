@@ -4,22 +4,22 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-unleveledAST :: UnleveledAST -> String
-unleveledAST =
+unleveled :: Unleveled -> String
+unleveled =
   \case
-    UnleveledAST_InLazyBraces x -> "(~" <> foldMap (decontextedAST unleveledAST) x <> "~)"
-    UnleveledAST_InStrictBraces x -> "(!" <> foldMap (decontextedAST unleveledAST) x <> "!)"
+    Unleveled_InLazyBraces x -> "(~" <> foldMap (decontexted unleveled) x <> "~)"
+    Unleveled_InStrictBraces x -> "(!" <> foldMap (decontexted unleveled) x <> "!)"
 
-decontextedAST :: (a -> String) -> DecontextedAST a -> String
-decontextedAST injection =
+decontexted :: (a -> String) -> Decontexted a -> String
+decontexted injection =
   \case
-    DecontextedAST_Injection x -> injection x
-    DecontextedAST_StringLit x -> stringLit x
-    DecontextedAST_QuasiQuote x -> quasiQuote x
-    DecontextedAST_InCurlies x -> "{" <> foldMap (decontextedAST injection) x <> "}"
-    DecontextedAST_InRoundies x -> "(" <> foldMap (decontextedAST injection) x <> ")"
-    DecontextedAST_InSquarelies x -> "[" <> foldMap (decontextedAST injection) x <> "]"
-    DecontextedAST_Char x -> return x
+    Decontexted_Injection x -> injection x
+    Decontexted_StringLit x -> stringLit x
+    Decontexted_QuasiQuote x -> quasiQuote x
+    Decontexted_InCurlies x -> "{" <> foldMap (decontexted injection) x <> "}"
+    Decontexted_InRoundies x -> "(" <> foldMap (decontexted injection) x <> ")"
+    Decontexted_InSquarelies x -> "[" <> foldMap (decontexted injection) x <> "]"
+    Decontexted_Char x -> return x
 
 stringLit :: String -> String
 stringLit =
@@ -34,27 +34,27 @@ qualifiedIdent :: QualifiedIdent -> String
 qualifiedIdent (ns, n) =
   foldMap (<> ".") ns <> n
 
-typeAST :: TypeAST -> String
-typeAST =
+type_ :: Type -> String
+type_ =
   \case
-    TypeAST_Record strict fields ->
+    Type_Record strict fields ->
       (if strict then "StrictRecord" else "LazyRecord") <> show (length fields) <> " " <>
       intercalate " " (map renderField fields)
       where
         renderField (name, asts) =
-          "\"" <> name <> "\" " <> foldMap (decontextedAST typeAST) asts
+          "\"" <> name <> "\" " <> foldMap (decontexted type_) asts
 
-expAST :: (a -> String) -> ExpAST a -> String
-expAST inner =
+exp :: (a -> String) -> Exp a -> String
+exp inner =
   \case
-    ExpAST_Record strict (RecordExpBody_Named sections) ->
+    Exp_Record strict (RecordExpBody_Named sections) ->
       flip evalState 0 $ do
         sectionStrings <-
           forM sortedSections $ \(name, asts) -> case asts of
             Nothing -> do
               modify succ
               fmap varName get
-            Just asts -> return $ "(" <> foldMap (decontextedAST inner) asts <> ")"
+            Just asts -> return $ "(" <> foldMap (decontexted inner) asts <> ")"
         numArgs <- get
         let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
                   " " <> intercalate " " sectionStrings

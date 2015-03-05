@@ -10,8 +10,8 @@ import qualified Record.Preprocessor.HSE as HSE
 process :: String -> String -> Either Error String
 process name code =
   flip runReaderT name $ do
-    asts <- parseUnleveledASTs code
-    levels <- reifyUnleveledASTLevels asts
+    asts <- parseUnleveleds code
+    levels <- reifyUnleveledLevels asts
     undefined
 
 type Error =
@@ -21,24 +21,24 @@ type Process =
   ReaderT String (Either Error)
 
 
-parseUnleveledASTs :: String -> Process [DecontextedAST UnleveledAST]
-parseUnleveledASTs code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontextedAST Parsing.unleveledAST))) name code
+parseUnleveleds :: String -> Process [Decontexted Unleveled]
+parseUnleveleds code =
+  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontexted Parsing.unleveled))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
-reifyUnleveledASTLevels :: [DecontextedAST UnleveledAST] -> Process [Level]
-reifyUnleveledASTLevels l =
-  case HSE.reifyLevels HSE.Mode_Module $ foldMap (Rendering.decontextedAST (const "Ѣ")) l of
+reifyUnleveledLevels :: [Decontexted Unleveled] -> Process [Level]
+reifyUnleveledLevels l =
+  case HSE.reifyLevels HSE.Mode_Module $ foldMap (Rendering.decontexted (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.decontextedAST Rendering.unleveledAST) $
+      foldMap (Rendering.decontexted Rendering.unleveled) $
       catMaybes $
       flip evalState mempty $ forM l $ \ast -> do
-        modify $ (<> ((stringCursorOffset . Rendering.decontextedAST (const "Ѣ")) ast))
+        modify $ (<> ((stringCursorOffset . Rendering.decontexted (const "Ѣ")) ast))
         o' <- get
         if o' < o
           then return $ Just ast
@@ -49,8 +49,8 @@ reifyUnleveledASTLevels l =
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
           Parsing.run Parsing.cursorOffsetAtEnd ""
       
-reifyExpASTLevels :: ExpAST UnleveledAST -> Process [Level]
-reifyExpASTLevels =
+reifyExpLevels :: Exp Unleveled -> Process [Level]
+reifyExpLevels =
   \case
-    ExpAST_Record strict (RecordExpBody_Named sections) ->
-      fmap concat . mapM reifyUnleveledASTLevels . catMaybes . map snd $ sections
+    Exp_Record strict (RecordExpBody_Named sections) ->
+      fmap concat . mapM reifyUnleveledLevels . catMaybes . map snd $ sections

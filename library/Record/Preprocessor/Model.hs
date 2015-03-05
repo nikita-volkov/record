@@ -33,45 +33,45 @@ type QualifiedIdent =
 
 -- |
 -- An AST with disambiguated contexts and an interspersed extension type.
-data DecontextedAST a =
-  DecontextedAST_Injection a |
-  DecontextedAST_StringLit String |
-  DecontextedAST_QuasiQuote QuasiQuote |
-  DecontextedAST_InCurlies [DecontextedAST a] |
-  DecontextedAST_InRoundies [DecontextedAST a] |
-  DecontextedAST_InSquarelies [DecontextedAST a] |
-  DecontextedAST_Char Char
+data Decontexted a =
+  Decontexted_Injection a |
+  Decontexted_StringLit String |
+  Decontexted_QuasiQuote QuasiQuote |
+  Decontexted_InCurlies [Decontexted a] |
+  Decontexted_InRoundies [Decontexted a] |
+  Decontexted_InSquarelies [Decontexted a] |
+  Decontexted_Char Char
   deriving (Show, Functor)
 
 
-data UnleveledAST =
-  UnleveledAST_InLazyBraces [DecontextedAST UnleveledAST] |
-  UnleveledAST_InStrictBraces [DecontextedAST UnleveledAST]
+data Unleveled =
+  Unleveled_InLazyBraces [Decontexted Unleveled] |
+  Unleveled_InStrictBraces [Decontexted Unleveled]
   deriving (Show)
 
 
-data TypeAST =
-  TypeAST_Record Bool [(String, [DecontextedAST TypeAST])]
+data Type =
+  Type_Record Bool [(String, [Decontexted Type])]
   deriving (Show)
 
 
-data ExpAST a =
-  ExpAST_Record Bool (RecordExpBody a)
+data Exp a =
+  Exp_Record Bool (RecordExpBody a)
   deriving (Show, Functor)
 
 data RecordExpBody a =
-  RecordExpBody_Positional [Maybe [DecontextedAST a]] |
-  RecordExpBody_Named [(String, Maybe [DecontextedAST a])]
+  RecordExpBody_Positional [Maybe [Decontexted a]] |
+  RecordExpBody_Named [(String, Maybe [Decontexted a])]
   deriving (Show, Functor)
 
 
-data PatAST =
-  PatAST_Record Bool [Either String [DecontextedAST PatAST]]
+data Pat =
+  Pat_Record Bool [Either String [Decontexted Pat]]
   deriving (Show)
 
 
 data AST =
-  AST_Type TypeAST |
-  AST_Exp (ExpAST AST) |
-  AST_Pat PatAST
+  AST_Type Type |
+  AST_Exp (Exp AST) |
+  AST_Pat Pat
   deriving (Show)

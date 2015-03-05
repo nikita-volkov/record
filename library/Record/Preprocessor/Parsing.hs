@@ -93,51 +93,51 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * DecontextedAST
+-- * Decontexted
 -------------------------
 
-decontextedAST :: Parse a -> Parse (DecontextedAST a)
-decontextedAST injection =
-  (try $ DecontextedAST_Injection <$> injection) <|>
-  (try $ DecontextedAST_StringLit <$> stringLit) <|>
-  (try $ DecontextedAST_QuasiQuote <$> quasiQuote) <|>
-  (try $ DecontextedAST_InCurlies <$> enclosedIn '{' '}') <|>
-  (try $ DecontextedAST_InRoundies <$> enclosedIn '(' ')') <|>
-  (try $ DecontextedAST_InSquarelies <$> enclosedIn '[' ']') <|>
-  (DecontextedAST_Char <$> anyChar)
+decontexted :: Parse a -> Parse (Decontexted a)
+decontexted injection =
+  (try $ Decontexted_Injection <$> injection) <|>
+  (try $ Decontexted_StringLit <$> stringLit) <|>
+  (try $ Decontexted_QuasiQuote <$> quasiQuote) <|>
+  (try $ Decontexted_InCurlies <$> enclosedIn '{' '}') <|>
+  (try $ Decontexted_InRoundies <$> enclosedIn '(' ')') <|>
+  (try $ Decontexted_InSquarelies <$> enclosedIn '[' ']') <|>
+  (Decontexted_Char <$> anyChar)
   where
     enclosedIn opening closing =
-      char opening *> manyTill (decontextedAST injection) (try (char closing))
+      char opening *> manyTill (decontexted injection) (try (char closing))
 
 
 -- *
 -------------------------
 
-unleveledAST :: Parse UnleveledAST
-unleveledAST =
-  (try (UnleveledAST_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-  (try (UnleveledAST_InStrictBraces <$> between (string "(!") (string "!)")))
+unleveled :: Parse Unleveled
+unleveled =
+  (try (Unleveled_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+  (try (Unleveled_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (decontextedAST unleveledAST) (try closing)
+      opening *> manyTill (decontexted unleveled) (try closing)
 
 
--- * DecontextedAST TypeAST
+-- * Decontexted Type
 -------------------------
 
-typeAST :: Parse TypeAST
-typeAST =
+type_ :: Parse Type
+type_ =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (TypeAST_Record strict) $
+      fmap (Type_Record strict) $
       string opening *> skipMany space *> sepBy1 field sep <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         field =
           (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-                  manyTill (decontextedAST typeAST) (try (lookAhead (sep <|> end)))
+                  manyTill (decontexted type_) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
@@ -147,12 +147,12 @@ typeAST =
 -- * Expression
 -------------------------
 
-expAST :: Parse (ExpAST UnleveledAST)
-expAST =
+exp :: Parse (Exp Unleveled)
+exp =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (ExpAST_Record strict) $
+      fmap (Exp_Record strict) $
       string opening *> skipMany space *> body <* end
       where
         (opening, closing) = 
@@ -174,24 +174,24 @@ expAST =
                 placeholder =
                   (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontextedAST unleveledAST) (try (lookAhead (sep <|> end)))
+              manyTill (decontexted unleveled) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern
 -------------------------
 
-patAST :: Parse PatAST
-patAST =
+pat :: Parse Pat
+pat =
   try (record True) <|> (record False)
   where
     record strict =
-      fmap (PatAST_Record strict) $
+      fmap (Pat_Record strict) $
       string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) sep <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         asts =
-          manyTill (decontextedAST patAST) (try (lookAhead (sep <|> end)))
+          manyTill (decontexted pat) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
