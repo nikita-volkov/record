@@ -49,3 +49,8 @@ reifyAmbiguousASTLevels l =
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
           Parsing.run Parsing.cursorOffsetAtEnd ""
       
+reifyExpASTLevels :: ExpAST AmbiguousAST -> Process [Level]
+reifyExpASTLevels =
+  \case
+    ExpAST_Record strict (RecordExpBody_Named sections) ->
+      fmap concat . mapM reifyAmbiguousASTLevels . catMaybes . map snd $ sections
