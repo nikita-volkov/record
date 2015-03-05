@@ -4,11 +4,11 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-ambiguousAST :: AmbiguousAST -> String
-ambiguousAST =
+unleveledAST :: UnleveledAST -> String
+unleveledAST =
   \case
-    AmbiguousAST_InLazyBraces x -> "(~" <> foldMap (decontextedAST ambiguousAST) x <> "~)"
-    AmbiguousAST_InStrictBraces x -> "(!" <> foldMap (decontextedAST ambiguousAST) x <> "!)"
+    UnleveledAST_InLazyBraces x -> "(~" <> foldMap (decontextedAST unleveledAST) x <> "~)"
+    UnleveledAST_InStrictBraces x -> "(!" <> foldMap (decontextedAST unleveledAST) x <> "!)"
 
 decontextedAST :: (a -> String) -> DecontextedAST a -> String
 decontextedAST injection =

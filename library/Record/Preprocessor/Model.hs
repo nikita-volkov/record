@@ -44,9 +44,9 @@ data DecontextedAST a =
   deriving (Show, Functor)
 
 
-data AmbiguousAST =
-  AmbiguousAST_InLazyBraces [DecontextedAST AmbiguousAST] |
-  AmbiguousAST_InStrictBraces [DecontextedAST AmbiguousAST]
+data UnleveledAST =
+  UnleveledAST_InLazyBraces [DecontextedAST UnleveledAST] |
+  UnleveledAST_InStrictBraces [DecontextedAST UnleveledAST]
   deriving (Show)
 
 

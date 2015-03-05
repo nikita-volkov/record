@@ -113,13 +113,13 @@ decontextedAST injection =
 -- *
 -------------------------
 
-ambiguousAST :: Parse AmbiguousAST
-ambiguousAST =
-  (try (AmbiguousAST_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-  (try (AmbiguousAST_InStrictBraces <$> between (string "(!") (string "!)")))
+unleveledAST :: Parse UnleveledAST
+unleveledAST =
+  (try (UnleveledAST_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+  (try (UnleveledAST_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (decontextedAST ambiguousAST) (try closing)
+      opening *> manyTill (decontextedAST unleveledAST) (try closing)
 
 
 -- * DecontextedAST TypeAST
@@ -147,7 +147,7 @@ typeAST =
 -- * Expression
 -------------------------
 
-expAST :: Parse (ExpAST AmbiguousAST)
+expAST :: Parse (ExpAST UnleveledAST)
 expAST =
   try (record True) <|> (record False)
   where
@@ -174,7 +174,7 @@ expAST =
                 placeholder =
                   (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontextedAST ambiguousAST) (try (lookAhead (sep <|> end)))
+              manyTill (decontextedAST unleveledAST) (try (lookAhead (sep <|> end)))
 
 
 -- * Pattern
