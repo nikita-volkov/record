@@ -133,6 +133,14 @@ unleveled =
       opening *> manyTill (decontexted unleveled) (try closing)
 
 
+-- *
+-------------------------
+
+placeholder :: Parse Placeholder
+placeholder =
+  (,) <$> cursorOffset <*> unleveled
+
+
 -- * Decontexted Type
 -------------------------
 

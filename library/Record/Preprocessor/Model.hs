@@ -50,6 +50,10 @@ data Unleveled =
   deriving (Show)
 
 
+type Placeholder =
+  (CursorOffset, Unleveled)
+
+
 data Type =
   Type_Record Bool [(String, [Decontexted Type])]
   deriving (Show)
