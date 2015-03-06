@@ -10,8 +10,8 @@ import qualified Record.Preprocessor.HSE as HSE
 process :: String -> String -> Either Error String
 process name code =
   flip runReaderT name $ do
-    asts <- parseUnleveleds code
-    levels <- reifyUnleveledLevels asts
+    asts <- parse code
+    levels <- reifyLevels Level_Decl asts
     undefined
 
 type Error =
@@ -21,15 +21,15 @@ type Process =
   ReaderT String (Either Error)
 
 
-parseUnleveleds :: String -> Process [Decontexted Unleveled]
-parseUnleveleds code =
+parse :: String -> Process [Decontexted Unleveled]
+parse code =
   ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontexted Parsing.unleveled))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
-reifyUnleveledLevels :: [Decontexted Unleveled] -> Process [Level]
-reifyUnleveledLevels l =
-  case HSE.reifyLevels HSE.Mode_Module $ foldMap (Rendering.decontexted (const "Ѣ")) l of
+reifyLevels :: Level -> [Decontexted Unleveled] -> Process [Level]
+reifyLevels level l =
+  case HSE.reifyLevels level $ foldMap (Rendering.decontexted (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
@@ -53,4 +53,6 @@ reifyExpLevels :: Exp Unleveled -> Process [Level]
 reifyExpLevels =
   \case
     Exp_Record strict (RecordExpBody_Named sections) ->
-      fmap concat . mapM reifyUnleveledLevels . catMaybes . map snd $ sections
+      fmap concat . mapM (reifyLevels Level_Exp) . catMaybes . map snd $ sections
+
+
