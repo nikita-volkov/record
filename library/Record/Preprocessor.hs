@@ -45,7 +45,6 @@ reifyLevels level l =
           else return $ Nothing
       where
         stringCursorOffset =
-          (\(CursorOffset l c) -> CursorOffset (pred l) (pred c)) .
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
           Parsing.run Parsing.cursorOffsetAtEnd ""
       

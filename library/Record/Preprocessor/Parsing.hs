@@ -23,7 +23,7 @@ run p n =
   parse p n
   where
     cursorOffset p =
-      CursorOffset (fromIntegral $ sourceLine p) (fromIntegral $ sourceColumn p)
+      CursorOffset (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
 
 labeled :: String -> Parse a -> Parse a
 labeled =
