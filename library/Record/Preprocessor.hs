@@ -21,13 +21,13 @@ type Process =
   ReaderT String (Either Error)
 
 
-parse :: String -> Process [Decontexted Unleveled]
+parse :: String -> Process [Decontexted Placeholder]
 parse code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontexted Parsing.unleveled))) name code
+  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontexted Parsing.placeholder))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
-reifyLevels :: Level -> [Decontexted Unleveled] -> Process [Level]
+reifyLevels :: Level -> [Decontexted Placeholder] -> Process [Level]
 reifyLevels level l =
   case HSE.reifyLevels level $ foldMap (Rendering.decontexted (const "Ѣ")) l of
     HSE.ParseOk a -> return a
@@ -35,7 +35,7 @@ reifyLevels level l =
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.decontexted Rendering.unleveled) $
+      foldMap (Rendering.decontexted (Rendering.unleveled . snd)) $
       catMaybes $
       flip evalState mempty $ forM l $ \ast -> do
         modify $ (<> ((stringCursorOffset . Rendering.decontexted (const "Ѣ")) ast))
@@ -48,7 +48,7 @@ reifyLevels level l =
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
           Parsing.run Parsing.cursorOffsetAtEnd ""
       
-reifyExpLevels :: Exp Unleveled -> Process [Level]
+reifyExpLevels :: Exp Placeholder -> Process [Level]
 reifyExpLevels =
   \case
     Exp_Record strict (RecordExpBody_Named sections) ->
