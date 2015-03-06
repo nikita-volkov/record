@@ -33,6 +33,17 @@ total :: Parse a -> Parse a
 total =
   (<* eof)  
 
+withCursorOffset :: Parse a -> Parse (CursorOffset, a)
+withCursorOffset p =
+  compose <$> cursorOffset <*> p <*> cursorOffset
+  where
+    compose start a end =
+      (diffCursorOffset start end, a)
+    diffCursorOffset (CursorOffset l1 c1) (CursorOffset l2 c2) =
+      if l1 <= l2
+        then CursorOffset (l2 - l1) c2
+        else CursorOffset 0 (max (c2 - c1) 0)
+
 -- *
 -------------------------
 
