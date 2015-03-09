@@ -137,8 +137,11 @@ return $ flip map [1 .. 24] $ \arity ->
                                                                  (nameE "ptr"))
                                                           (sizeOfFun' (i - 1))))
                                              (nameE ("v" <> show i)))) [1..arity])) [])]
+    inlineFun name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
   in
-    InstanceD context (AppT (ConT (mkName "Storable")) recordType) [sizeOfFun, alignmentFun, peekFun, pokeFun]
+    InstanceD context (AppT (ConT (mkName "Storable")) recordType)
+              [sizeOfFun, inlineFun "sizeOf", alignmentFun, inlineFun "alignment"
+              , peekFun, inlineFun "peek", pokeFun, inlineFun "poke"]
 
 -- *
 -------------------------
