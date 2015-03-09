@@ -14,12 +14,17 @@ decontexted :: (a -> String) -> Decontexted a -> String
 decontexted injection =
   \case
     Decontexted_Injection x -> injection x
+    Decontexted_CharLit x -> charLit x
     Decontexted_StringLit x -> stringLit x
     Decontexted_QuasiQuote x -> quasiQuote x
     Decontexted_InCurlies x -> "{" <> foldMap (decontexted injection) x <> "}"
     Decontexted_InRoundies x -> "(" <> foldMap (decontexted injection) x <> ")"
     Decontexted_InSquarelies x -> "[" <> foldMap (decontexted injection) x <> "]"
     Decontexted_Char x -> return x
+
+charLit :: String -> String
+charLit =
+  ('\'' :) . (<> "'")
 
 stringLit :: String -> String
 stringLit =

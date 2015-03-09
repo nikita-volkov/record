@@ -56,6 +56,18 @@ cursorOffsetAtEnd :: Parse CursorOffset
 cursorOffsetAtEnd =
   skipMany anyChar *> cursorOffset
 
+charLit :: Parse String
+charLit =
+  labeled "Char Literal" $
+  char '\'' *> content <* char '\''
+  where
+    content =
+      try escapeSequence <|> 
+      fmap pure (noneOf "'\\")
+      where
+        escapeSequence =
+          ('\\' :) <$> (char '\\' *> (fmap pure (char '\'') <|> many1 (noneOf "'")))
+
 stringLit :: Parse String
 stringLit =
   labeled "String Literal" $
@@ -110,6 +122,7 @@ upperCaseIdent =
 decontexted :: Parse a -> Parse (Decontexted a)
 decontexted injection =
   (try $ Decontexted_Injection <$> injection) <|>
+  (try $ Decontexted_CharLit <$> charLit) <|>
   (try $ Decontexted_StringLit <$> stringLit) <|>
   (try $ Decontexted_QuasiQuote <$> quasiQuote) <|>
   (try $ Decontexted_InCurlies <$> enclosedIn '{' '}') <|>

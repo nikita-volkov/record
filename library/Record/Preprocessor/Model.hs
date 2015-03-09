@@ -35,6 +35,7 @@ type QualifiedIdent =
 -- An AST with disambiguated contexts and an interspersed extension type.
 data Decontexted a =
   Decontexted_Injection a |
+  Decontexted_CharLit String |
   Decontexted_StringLit String |
   Decontexted_QuasiQuote QuasiQuote |
   Decontexted_InCurlies [Decontexted a] |
