@@ -62,7 +62,7 @@ library
     Haskell2010
   other-modules:
     Record.Preprocessor.Model
-    Record.Preprocessor.Parsing
+    Record.Preprocessor.Parse
     Record.Preprocessor.Rendering
     Record.Preprocessor.HSE
     Record.Preprocessor.HSE.Levels

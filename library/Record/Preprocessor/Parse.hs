@@ -1,6 +1,6 @@
 -- |
 -- A set of composable string parsers.
-module Record.Preprocessor.Parsing where
+module Record.Preprocessor.Parse where
 
 import Record.Prelude hiding (takeWhile, exp, try, many)
 import Record.Preprocessor.Model

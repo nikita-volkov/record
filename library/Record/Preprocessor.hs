@@ -2,7 +2,7 @@ module Record.Preprocessor where
 
 import Record.Prelude
 import Record.Preprocessor.Model
-import qualified Record.Preprocessor.Parsing as Parsing
+import qualified Record.Preprocessor.Parse as Parse
 import qualified Record.Preprocessor.Rendering as Rendering
 import qualified Record.Preprocessor.HSE as HSE
 
@@ -23,7 +23,7 @@ type Process =
 
 parse :: String -> Process [Decontexted Placeholder]
 parse code =
-  ReaderT $ \name -> Parsing.run (Parsing.total (many (Parsing.decontexted Parsing.placeholder))) name code
+  ReaderT $ \name -> Parse.run (Parse.total (many (Parse.decontexted Parse.placeholder))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
@@ -46,7 +46,7 @@ reifyLevels level l =
       where
         stringCursorOffset =
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
-          Parsing.run Parsing.cursorOffsetAtEnd ""
+          Parse.run Parse.cursorOffsetAtEnd ""
       
 reifyExpLevels :: Exp Placeholder -> Process [Level]
 reifyExpLevels =
