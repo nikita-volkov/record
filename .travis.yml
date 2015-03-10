@@ -42,7 +42,7 @@ install:
   # Install the "haskell-src-exts" implicit dependency
   - cabal install happy
   # Build the library
-  - cabal build
+  - travis_wait cabal build
   # Configure and build the remaining stuff
   - cabal configure 
       $([ "$tests" = "1" ] && echo "--enable-tests")
@@ -52,4 +52,4 @@ install:
 
 script:
   - | 
-    [ "$tests" = "1" ] && cabal test --show-details=always
+    [ "$tests" = "1" ] && travis_wait cabal test --show-details=always
