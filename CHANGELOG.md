@@ -1,3 +1,7 @@
+# 0.3.0
+* A bit of type renaming
+* Intances of `Storable`
+
 # 0.2.1
 * Parsing of qualified identifiers
 

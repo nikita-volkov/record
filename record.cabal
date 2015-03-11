@@ -1,7 +1,7 @@
 name:
   record
 version:
-  0.2.2
+  0.3.0
 synopsis:
   First class records implemented with quasi-quotation
 description:
