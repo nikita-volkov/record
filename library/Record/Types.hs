@@ -93,8 +93,14 @@ return $ flip map [1 .. 24] $ \arity ->
                           (VarT (mkName ("v" <> show i))))
             (ConT typeName)
             [1 .. arity]
+#if MIN_VERSION_template_haskell(2,10,0)
+    -- In TH with `ConstraintKinds` the context is just simply a type
+    context = map (\i -> AppT (ConT (mkName "Storable")) (VarT (mkName ("v" <> show i))))
+              [1 .. arity]
+#else
     context = map (\i -> ClassP (mkName "Storable")  [VarT (mkName ("v" <> show i))])
               [1 .. arity]
+#endif
     nameE = VarE . mkName
     -- The sum of the sizes of all types
     sizeOfFun' n = foldr (\a b -> AppE (AppE (nameE "+") a) b) (LitE (IntegerL 0)) $
