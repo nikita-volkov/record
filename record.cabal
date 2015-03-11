@@ -65,6 +65,8 @@ library
     Record.Preprocessor.Model
     Record.Preprocessor.Parse
     Record.Preprocessor.Rendering
+    Record.Preprocessor.Rendering.Render
+    Record.Preprocessor.Rendering.MeasuredString
     Record.Preprocessor.HSE
     Record.Preprocessor.HSE.Levels
   exposed-modules:
