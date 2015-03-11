@@ -1,7 +1,7 @@
 module Record.Preprocessor.Model where
 
 import Record.Prelude
-import qualified Record.Preprocessor.CursorOffset as CursorOffset
+import qualified Record.Preprocessor.Position as Position
 
 
 data Level =
@@ -40,7 +40,7 @@ data Unleveled =
 
 
 type Placeholder =
-  (CursorOffset.CursorOffset, Unleveled)
+  (Position.Position, Unleveled)
 
 
 data Type =

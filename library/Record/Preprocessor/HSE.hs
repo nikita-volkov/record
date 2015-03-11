@@ -11,7 +11,7 @@ import Record.Preprocessor.Model
 import qualified Language.Haskell.Exts as E
 import qualified Data.HashMap.Strict as HashMap
 import qualified Record.Preprocessor.HSE.Levels as Levels
-import qualified Record.Preprocessor.CursorOffset as CursorOffset
+import qualified Record.Preprocessor.Position as Position
 
 
 -- |
@@ -30,6 +30,6 @@ parseMode =
     E.extensions = map E.EnableExtension [minBound .. maxBound]
   }
 
-srcLocToCursorOffset :: E.SrcLoc -> CursorOffset.CursorOffset
+srcLocToCursorOffset :: E.SrcLoc -> Position.Position
 srcLocToCursorOffset (E.SrcLoc _ l c) =
   (,) (fromIntegral l) (fromIntegral c)

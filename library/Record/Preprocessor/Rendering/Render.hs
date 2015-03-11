@@ -1,7 +1,7 @@
 module Record.Preprocessor.Rendering.Render where
 
 import Record.Prelude
-import qualified Record.Preprocessor.CursorOffset as CursorOffset
+import qualified Record.Preprocessor.Position as Position
 import qualified Record.Preprocessor.Parse as Parse
 import qualified Record.Preprocessor.Rendering.MeasuredString as MeasuredString
 
@@ -10,7 +10,7 @@ type Render =
   StateT RenderState
 
 type RenderState =
-  (CursorOffset.CursorOffset, StringBuilder)
+  (Position.Position, StringBuilder)
 
 -- |
 -- A list of strings in a reverse order.
@@ -23,24 +23,24 @@ putString :: Monad m => String -> Render m ()
 putString =
   putMeasuredString . MeasuredString.string
 
-putSpace :: Monad m => CursorOffset.CursorOffset -> Render m ()
+putSpace :: Monad m => Position.Position -> Render m ()
 putSpace =
   putMeasuredString . MeasuredString.space
 
 putMeasuredString :: Monad m => MeasuredString.MeasuredString -> Render m ()
 putMeasuredString (o, c) =
-  modify $ \(so, sb) -> (CursorOffset.add o so, c : sb)
+  modify $ \(so, sb) -> (Position.add o so, c : sb)
 
-cursorOffset :: Monad m => Render m CursorOffset.CursorOffset
+cursorOffset :: Monad m => Render m Position.Position
 cursorOffset =
   liftM fst get
 
 -- |
 -- Fills with whitespace until an offset.
-fillWithSpaceUntil :: Monad m => CursorOffset.CursorOffset -> Render m ()
+fillWithSpaceUntil :: Monad m => Position.Position -> Render m ()
 fillWithSpaceUntil targetOffset =
   do
     (currentOffset, _) <- get
-    putSpace (max CursorOffset.zero (CursorOffset.subtract currentOffset targetOffset))
+    putSpace (max Position.zero (Position.subtract currentOffset targetOffset))
 
 
