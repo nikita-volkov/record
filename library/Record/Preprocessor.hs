@@ -5,6 +5,7 @@ import Record.Preprocessor.Model
 import qualified Record.Preprocessor.Parse as Parse
 import qualified Record.Preprocessor.Rendering as Rendering
 import qualified Record.Preprocessor.HSE as HSE
+import qualified Record.Preprocessor.CursorOffset as CursorOffset
 
 
 process :: String -> String -> Either Error String
@@ -15,7 +16,7 @@ process name code =
     undefined
 
 type Error =
-  (CursorOffset, String)
+  (CursorOffset.CursorOffset, String)
   
 type Process =
   ReaderT String (Either Error)
@@ -37,8 +38,8 @@ reifyLevels level l =
       stringCursorOffset $
       foldMap (Rendering.decontexted (Rendering.unleveled . snd)) $
       catMaybes $
-      flip evalState mempty $ forM l $ \ast -> do
-        modify $ (<> ((stringCursorOffset . Rendering.decontexted (const "Ѣ")) ast))
+      flip evalState CursorOffset.zero $ forM l $ \ast -> do
+        modify $ (CursorOffset.add ((stringCursorOffset . Rendering.decontexted (const "Ѣ")) ast))
         o' <- get
         if o' < o
           then return $ Just ast

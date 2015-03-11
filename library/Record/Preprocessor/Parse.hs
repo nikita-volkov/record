@@ -6,6 +6,7 @@ import Record.Prelude hiding (takeWhile, exp, try, many)
 import Record.Preprocessor.Model
 import Text.Parsec hiding ((<|>))
 import Text.Parsec.Error
+import qualified Record.Preprocessor.CursorOffset as CursorOffset
 
 
 -- * General stuff
@@ -15,7 +16,7 @@ type Parse =
   Parsec String ()
 
 type Error =
-  (CursorOffset, String)
+  (CursorOffset.CursorOffset, String)
 
 run :: Parse a -> String -> String -> Either Error a
 run p n =
@@ -23,7 +24,7 @@ run p n =
   parse p n
   where
     cursorOffset p =
-      CursorOffset (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
+      (,) (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
 
 labeled :: String -> Parse a -> Parse a
 labeled =
@@ -33,26 +34,22 @@ total :: Parse a -> Parse a
 total =
   (<* eof)  
 
-withCursorOffset :: Parse a -> Parse (CursorOffset, a)
+withCursorOffset :: Parse a -> Parse (CursorOffset.CursorOffset, a)
 withCursorOffset p =
   compose <$> cursorOffset <*> p <*> cursorOffset
   where
     compose start a end =
-      (diffCursorOffset start end, a)
-    diffCursorOffset (CursorOffset l1 c1) (CursorOffset l2 c2) =
-      if l1 <= l2
-        then CursorOffset (l2 - l1) c2
-        else CursorOffset 0 (max (c2 - c1) 0)
+      (CursorOffset.subtract start end, a)
 
 -- *
 -------------------------
 
-cursorOffset :: Parse CursorOffset
+cursorOffset :: Parse CursorOffset.CursorOffset
 cursorOffset =
   flip fmap getPosition $ \p ->
-    CursorOffset (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
+    (,) (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
 
-cursorOffsetAtEnd :: Parse CursorOffset
+cursorOffsetAtEnd :: Parse CursorOffset.CursorOffset
 cursorOffsetAtEnd =
   skipMany anyChar *> cursorOffset
 

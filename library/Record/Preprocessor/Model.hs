@@ -1,6 +1,7 @@
 module Record.Preprocessor.Model where
 
 import Record.Prelude
+import qualified Record.Preprocessor.CursorOffset as CursorOffset
 
 
 data Level =
@@ -9,19 +10,6 @@ data Level =
   Level_Pat |
   Level_Decl
   deriving (Show)
-
-
-data CursorOffset =
-  CursorOffset Int Int
-  deriving (Show, Ord, Eq)
-
-instance Monoid CursorOffset where
-  mempty = 
-    CursorOffset 0 0
-  mappend (CursorOffset l1 c1) (CursorOffset l2 c2) =
-    if l2 <= 0
-      then CursorOffset (l1 + l2) (c1 + c2)
-      else CursorOffset (l1 + l2) c2
 
 
 type QuasiQuote =
@@ -52,7 +40,7 @@ data Unleveled =
 
 
 type Placeholder =
-  (CursorOffset, Unleveled)
+  (CursorOffset.CursorOffset, Unleveled)
 
 
 data Type =
