@@ -50,7 +50,7 @@ withCursorOffset p =
 cursorOffset :: Parse CursorOffset
 cursorOffset =
   flip fmap getPosition $ \p ->
-    CursorOffset (fromIntegral $ sourceLine p) (fromIntegral $ sourceColumn p)
+    CursorOffset (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
 
 cursorOffsetAtEnd :: Parse CursorOffset
 cursorOffsetAtEnd =
