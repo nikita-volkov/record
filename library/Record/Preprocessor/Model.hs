@@ -30,7 +30,7 @@ data Decontexted a =
   Decontexted_InRoundies [Decontexted a] |
   Decontexted_InSquarelies [Decontexted a] |
   Decontexted_Char Char
-  deriving (Show, Functor)
+  deriving (Show, Functor, Foldable, Traversable)
 
 
 data Unleveled =
@@ -50,7 +50,7 @@ data Type =
 
 data Exp a =
   Exp_Record Bool [(String, Maybe [Decontexted a])]
-  deriving (Show, Functor)
+  deriving (Show, Functor, Foldable, Traversable)
 
 
 data Pat =
