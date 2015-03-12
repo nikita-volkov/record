@@ -22,13 +22,13 @@ type Process =
   ReaderT String (Either Error)
 
 
-parse :: String -> Process [Haskell Placeholder]
+parse :: String -> Process (HaskellForest Placeholder)
 parse code =
   ReaderT $ \name -> Parse.run (Parse.total (many (Parse.haskell Parse.placeholder))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
-reifyLevels :: Level -> [Haskell Placeholder] -> Process [Level]
+reifyLevels :: Level -> (HaskellForest Placeholder) -> Process [Level]
 reifyLevels level l =
   case HSE.reifyLevels level $ foldMap (Rendering.haskell (const "Ѣ")) l of
     HSE.ParseOk a -> return a
