@@ -22,24 +22,24 @@ type Process =
   ReaderT String (Either Error)
 
 
-parse :: String -> Process [Decontexted Placeholder]
+parse :: String -> Process [Haskell Placeholder]
 parse code =
-  ReaderT $ \name -> Parse.run (Parse.total (many (Parse.decontexted Parse.placeholder))) name code
+  ReaderT $ \name -> Parse.run (Parse.total (many (Parse.haskell Parse.placeholder))) name code
 
 -- |
 -- Detect levels of all top-level record splices.
-reifyLevels :: Level -> [Decontexted Placeholder] -> Process [Level]
+reifyLevels :: Level -> [Haskell Placeholder] -> Process [Level]
 reifyLevels level l =
-  case HSE.reifyLevels level $ foldMap (Rendering.decontexted (const "Ѣ")) l of
+  case HSE.reifyLevels level $ foldMap (Rendering.haskell (const "Ѣ")) l of
     HSE.ParseOk a -> return a
     HSE.ParseFailed l m -> lift $ Left (correctOffset $ HSE.srcLocToCursorOffset l, m)
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.decontexted (Rendering.unleveled . snd)) $
+      foldMap (Rendering.haskell (Rendering.unleveled . snd)) $
       catMaybes $
       flip evalState Position.zero $ forM l $ \ast -> do
-        modify $ (Position.add ((stringCursorOffset . Rendering.decontexted (const "Ѣ")) ast))
+        modify $ (Position.add ((stringCursorOffset . Rendering.haskell (const "Ѣ")) ast))
         o' <- get
         if o' < o
           then return $ Just ast

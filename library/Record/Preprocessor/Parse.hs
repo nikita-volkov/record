@@ -113,22 +113,22 @@ upperCaseIdent =
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
 
--- * Decontexted
+-- * Haskell
 -------------------------
 
-decontexted :: Parse a -> Parse (Decontexted a)
-decontexted injection =
-  (try $ Decontexted_Injection <$> injection) <|>
-  (try $ Decontexted_CharLit <$> charLit) <|>
-  (try $ Decontexted_StringLit <$> stringLit) <|>
-  (try $ Decontexted_QuasiQuote <$> quasiQuote) <|>
-  (try $ Decontexted_InCurlies <$> enclosedIn '{' '}') <|>
-  (try $ Decontexted_InRoundies <$> enclosedIn '(' ')') <|>
-  (try $ Decontexted_InSquarelies <$> enclosedIn '[' ']') <|>
-  (Decontexted_Char <$> anyChar)
+haskell :: Parse a -> Parse (Haskell a)
+haskell injection =
+  (try $ Haskell_Extension <$> injection) <|>
+  (try $ Haskell_CharLit <$> charLit) <|>
+  (try $ Haskell_StringLit <$> stringLit) <|>
+  (try $ Haskell_QuasiQuote <$> quasiQuote) <|>
+  (try $ Haskell_InCurlies <$> enclosedIn '{' '}') <|>
+  (try $ Haskell_InRoundies <$> enclosedIn '(' ')') <|>
+  (try $ Haskell_InSquarelies <$> enclosedIn '[' ']') <|>
+  (Haskell_Char <$> anyChar)
   where
     enclosedIn opening closing =
-      char opening *> manyTill (decontexted injection) (try (char closing))
+      char opening *> manyTill (haskell injection) (try (char closing))
 
 
 -- *
@@ -140,7 +140,7 @@ unleveled =
   (try (Unleveled_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (decontexted unleveled) (try closing)
+      opening *> manyTill (haskell unleveled) (try closing)
 
 
 -- *
@@ -151,7 +151,7 @@ placeholder =
   (,) <$> cursorOffset <*> unleveled
 
 
--- * Decontexted Type
+-- * Haskell Type
 -------------------------
 
 type_ :: Parse Type
@@ -166,7 +166,7 @@ type_ =
           if strict then ("(!", "!)") else ("(~", "~)")
         field =
           (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-                  manyTill (decontexted type_) (try (lookAhead (sep <|> end)))
+                  manyTill (haskell type_) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
@@ -199,7 +199,7 @@ exp =
             placeholder =
               (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontexted unleveled) (lookAhead (try sep <|> try end))
+              manyTill (haskell unleveled) (lookAhead (try sep <|> try end))
 
 
 -- * Pattern
@@ -216,7 +216,7 @@ pat =
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         asts =
-          manyTill (decontexted pat) (try (lookAhead (sep <|> end)))
+          manyTill (haskell pat) (try (lookAhead (sep <|> end)))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =

@@ -20,22 +20,22 @@ type QualifiedIdent =
 
 
 -- |
--- An AST with disambiguated contexts and an interspersed extension type.
-data Decontexted a =
-  Decontexted_Injection a |
-  Decontexted_CharLit String |
-  Decontexted_StringLit String |
-  Decontexted_QuasiQuote QuasiQuote |
-  Decontexted_InCurlies [Decontexted a] |
-  Decontexted_InRoundies [Decontexted a] |
-  Decontexted_InSquarelies [Decontexted a] |
-  Decontexted_Char Char
+-- An extendable Haskell AST.
+data Haskell a =
+  Haskell_Extension a |
+  Haskell_CharLit String |
+  Haskell_StringLit String |
+  Haskell_QuasiQuote QuasiQuote |
+  Haskell_InCurlies [Haskell a] |
+  Haskell_InRoundies [Haskell a] |
+  Haskell_InSquarelies [Haskell a] |
+  Haskell_Char Char
   deriving (Show, Functor, Foldable, Traversable)
 
 
 data Unleveled =
-  Unleveled_InLazyBraces [Decontexted Unleveled] |
-  Unleveled_InStrictBraces [Decontexted Unleveled]
+  Unleveled_InLazyBraces [Haskell Unleveled] |
+  Unleveled_InStrictBraces [Haskell Unleveled]
   deriving (Show)
 
 
@@ -44,17 +44,17 @@ type Placeholder =
 
 
 data Type =
-  Type_Record Bool [(String, [Decontexted Type])]
+  Type_Record Bool [(String, [Haskell Type])]
   deriving (Show)
 
 
 data Exp a =
-  Exp_Record Bool [(String, Maybe [Decontexted a])]
+  Exp_Record Bool [(String, Maybe [Haskell a])]
   deriving (Show, Functor, Foldable, Traversable)
 
 
 data Pat =
-  Pat_Record Bool [Either String [Decontexted Pat]]
+  Pat_Record Bool [Either String [Haskell Pat]]
   deriving (Show)
 
 

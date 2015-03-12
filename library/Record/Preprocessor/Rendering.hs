@@ -7,20 +7,20 @@ import Record.Preprocessor.Model
 unleveled :: Unleveled -> String
 unleveled =
   \case
-    Unleveled_InLazyBraces x -> "(~" <> foldMap (decontexted unleveled) x <> "~)"
-    Unleveled_InStrictBraces x -> "(!" <> foldMap (decontexted unleveled) x <> "!)"
+    Unleveled_InLazyBraces x -> "(~" <> foldMap (haskell unleveled) x <> "~)"
+    Unleveled_InStrictBraces x -> "(!" <> foldMap (haskell unleveled) x <> "!)"
 
-decontexted :: (a -> String) -> Decontexted a -> String
-decontexted injection =
+haskell :: (a -> String) -> Haskell a -> String
+haskell injection =
   \case
-    Decontexted_Injection x -> injection x
-    Decontexted_CharLit x -> charLit x
-    Decontexted_StringLit x -> stringLit x
-    Decontexted_QuasiQuote x -> quasiQuote x
-    Decontexted_InCurlies x -> "{" <> foldMap (decontexted injection) x <> "}"
-    Decontexted_InRoundies x -> "(" <> foldMap (decontexted injection) x <> ")"
-    Decontexted_InSquarelies x -> "[" <> foldMap (decontexted injection) x <> "]"
-    Decontexted_Char x -> return x
+    Haskell_Extension x -> injection x
+    Haskell_CharLit x -> charLit x
+    Haskell_StringLit x -> stringLit x
+    Haskell_QuasiQuote x -> quasiQuote x
+    Haskell_InCurlies x -> "{" <> foldMap (haskell injection) x <> "}"
+    Haskell_InRoundies x -> "(" <> foldMap (haskell injection) x <> ")"
+    Haskell_InSquarelies x -> "[" <> foldMap (haskell injection) x <> "]"
+    Haskell_Char x -> return x
 
 charLit :: String -> String
 charLit =
@@ -47,7 +47,7 @@ type_ =
       intercalate " " (map renderField fields)
       where
         renderField (name, asts) =
-          "\"" <> name <> "\" " <> foldMap (decontexted type_) asts
+          "\"" <> name <> "\" " <> foldMap (haskell type_) asts
 
 exp :: (a -> String) -> Exp a -> String
 exp inner =
@@ -59,7 +59,7 @@ exp inner =
             Nothing -> do
               modify succ
               fmap varName get
-            Just asts -> return $ "(" <> foldMap (decontexted inner) asts <> ")"
+            Just asts -> return $ "(" <> foldMap (haskell inner) asts <> ")"
         numArgs <- get
         let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
                   " " <> intercalate " " sectionStrings
