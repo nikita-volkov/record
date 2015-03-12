@@ -61,8 +61,8 @@ data Pat =
   deriving (Show)
 
 
-data AST =
-  AST_Type Type |
-  AST_Exp (Exp AST) |
-  AST_Pat Pat
+data Extension =
+  Extension_Type Type |
+  Extension_Exp (Exp Extension) |
+  Extension_Pat Pat
   deriving (Show)
