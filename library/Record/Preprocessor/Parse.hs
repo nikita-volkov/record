@@ -176,7 +176,7 @@ type_ =
 -- * Expression
 -------------------------
 
-exp :: Parse (Exp Unleveled)
+exp :: Parse (Exp (HaskellForest Unleveled))
 exp =
   try (record True) <|> (record False)
   where

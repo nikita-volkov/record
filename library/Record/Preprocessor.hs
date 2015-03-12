@@ -48,11 +48,11 @@ reifyLevels level l =
         stringCursorOffset =
           either (error . showString "Unexpected cursor offset parsing error: " . show) id .
           Parse.run Parse.cursorOffsetAtEnd ""
-      
-reifyExpLevels :: Exp Placeholder -> Process [Level]
-reifyExpLevels =
-  \case
-    Exp_Record strict sections ->
-      fmap concat . mapM (reifyLevels Level_Exp) . catMaybes . map snd $ sections
 
+reifyExp :: Exp (HaskellForest Placeholder) -> Process (Exp (HaskellForest Extension))
+reifyExp =
+  traverse (reifyExtension Level_Exp)
 
+reifyExtension :: Level -> HaskellForest Placeholder -> Process (HaskellForest Extension)
+reifyExtension =
+  undefined

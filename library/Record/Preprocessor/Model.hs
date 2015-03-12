@@ -52,7 +52,7 @@ data Type =
 
 
 data Exp a =
-  Exp_Record Bool [(String, Maybe (HaskellForest a))]
+  Exp_Record Bool [(String, Maybe a)]
   deriving (Show, Functor, Foldable, Traversable)
 
 
@@ -63,6 +63,6 @@ data Pat =
 
 data Extension =
   Extension_Type Type |
-  Extension_Exp (Exp Extension) |
+  Extension_Exp (Exp (HaskellForest Extension)) |
   Extension_Pat Pat
   deriving (Show)

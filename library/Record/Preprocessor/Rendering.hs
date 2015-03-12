@@ -59,7 +59,7 @@ exp inner =
             Nothing -> do
               modify succ
               fmap varName get
-            Just asts -> return $ "(" <> foldMap (haskell inner) asts <> ")"
+            Just a -> return $ "(" <> inner a <> ")"
         numArgs <- get
         let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
                   " " <> intercalate " " sectionStrings
