@@ -52,7 +52,7 @@ type_ =
 exp :: (a -> String) -> Exp a -> String
 exp inner =
   \case
-    Exp_Record strict (RecordExpBody_Named sections) ->
+    Exp_Record strict sections ->
       flip evalState 0 $ do
         sectionStrings <-
           forM sortedSections $ \(name, asts) -> case asts of

@@ -191,17 +191,13 @@ exp =
         end =
           skipMany space <* string closing
         body =
-          named
+          sepBy1 (try assignment <|> placeholder) sep
           where
-            named =
-              RecordExpBody_Named <$>
-              sepBy1 (try assignment <|> placeholder) sep
-              where
-                assignment =
-                  (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
-                          (Just <$> asts)
-                placeholder =
-                  (,) <$> lowerCaseIdent <*> pure Nothing
+            assignment =
+              (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
+                      (Just <$> asts)
+            placeholder =
+              (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
               manyTill (decontexted unleveled) (try (lookAhead (sep <|> end)))
 

@@ -52,7 +52,7 @@ reifyLevels level l =
 reifyExpLevels :: Exp Placeholder -> Process [Level]
 reifyExpLevels =
   \case
-    Exp_Record strict (RecordExpBody_Named sections) ->
+    Exp_Record strict sections ->
       fmap concat . mapM (reifyLevels Level_Exp) . catMaybes . map snd $ sections
 
 

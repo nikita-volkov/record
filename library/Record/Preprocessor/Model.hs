@@ -49,12 +49,7 @@ data Type =
 
 
 data Exp a =
-  Exp_Record Bool (RecordExpBody a)
-  deriving (Show, Functor)
-
-data RecordExpBody a =
-  RecordExpBody_Positional [Maybe [Decontexted a]] |
-  RecordExpBody_Named [(String, Maybe [Decontexted a])]
+  Exp_Record Bool [(String, Maybe [Decontexted a])]
   deriving (Show, Functor)
 
 
