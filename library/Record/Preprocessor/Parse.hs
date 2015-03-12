@@ -199,7 +199,7 @@ exp =
             placeholder =
               (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (decontexted unleveled) (try (lookAhead (sep <|> end)))
+              manyTill (decontexted unleveled) (lookAhead (try sep <|> try end))
 
 
 -- * Pattern
