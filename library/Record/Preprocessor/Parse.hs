@@ -176,7 +176,7 @@ type_ =
 -- * Expression
 -------------------------
 
-exp :: Parse (Exp (HaskellForest UnleveledExtension))
+exp :: Parse (Exp (HaskellForest Placeholder))
 exp =
   try (record True) <|> (record False)
   where
@@ -191,15 +191,15 @@ exp =
         end =
           skipMany space <* string closing
         body =
-          sepBy1 (try assignment <|> placeholder) sep
+          sepBy1 (try assignment <|> nonAssignment) sep
           where
             assignment =
               (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
                       (Just <$> asts)
-            placeholder =
+            nonAssignment =
               (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (haskell unleveledExtension) (lookAhead (try sep <|> try end))
+              manyTill (haskell placeholder) (lookAhead (try sep <|> try end))
 
 
 -- * Pattern
