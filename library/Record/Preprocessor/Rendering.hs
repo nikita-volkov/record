@@ -4,11 +4,11 @@ import Record.Prelude
 import Record.Preprocessor.Model
 
 
-unleveled :: Unleveled -> String
-unleveled =
+unleveledExtension :: UnleveledExtension -> String
+unleveledExtension =
   \case
-    Unleveled_InLazyBraces x -> "(~" <> foldMap (haskell unleveled) x <> "~)"
-    Unleveled_InStrictBraces x -> "(!" <> foldMap (haskell unleveled) x <> "!)"
+    UnleveledExtension_InLazyBraces x -> "(~" <> foldMap (haskell unleveledExtension) x <> "~)"
+    UnleveledExtension_InStrictBraces x -> "(!" <> foldMap (haskell unleveledExtension) x <> "!)"
 
 haskell :: (a -> String) -> Haskell a -> String
 haskell injection =

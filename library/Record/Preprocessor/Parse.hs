@@ -134,13 +134,13 @@ haskell injection =
 -- *
 -------------------------
 
-unleveled :: Parse Unleveled
-unleveled =
-  (try (Unleveled_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-  (try (Unleveled_InStrictBraces <$> between (string "(!") (string "!)")))
+unleveledExtension :: Parse UnleveledExtension
+unleveledExtension =
+  (try (UnleveledExtension_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
+  (try (UnleveledExtension_InStrictBraces <$> between (string "(!") (string "!)")))
   where
     between opening closing =
-      opening *> manyTill (haskell unleveled) (try closing)
+      opening *> manyTill (haskell unleveledExtension) (try closing)
 
 
 -- *
@@ -148,7 +148,7 @@ unleveled =
 
 placeholder :: Parse Placeholder
 placeholder =
-  (,) <$> cursorOffset <*> unleveled
+  (,) <$> cursorOffset <*> unleveledExtension
 
 
 -- * Haskell Type
@@ -176,7 +176,7 @@ type_ =
 -- * Expression
 -------------------------
 
-exp :: Parse (Exp (HaskellForest Unleveled))
+exp :: Parse (Exp (HaskellForest UnleveledExtension))
 exp =
   try (record True) <|> (record False)
   where
@@ -199,7 +199,7 @@ exp =
             placeholder =
               (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (haskell unleveled) (lookAhead (try sep <|> try end))
+              manyTill (haskell unleveledExtension) (lookAhead (try sep <|> try end))
 
 
 -- * Pattern
@@ -221,5 +221,4 @@ pat =
           skipMany space <* char ',' <* skipMany space
         end =
           skipMany space <* string closing
-
 

@@ -36,14 +36,14 @@ type HaskellForest a =
   [Haskell a]
 
 
-data Unleveled =
-  Unleveled_InLazyBraces (HaskellForest Unleveled) |
-  Unleveled_InStrictBraces (HaskellForest Unleveled)
+data UnleveledExtension =
+  UnleveledExtension_InLazyBraces (HaskellForest UnleveledExtension) |
+  UnleveledExtension_InStrictBraces (HaskellForest UnleveledExtension)
   deriving (Show)
 
 
 type Placeholder =
-  (Position.Position, Unleveled)
+  (Position.Position, UnleveledExtension)
 
 
 data Type =

@@ -36,7 +36,7 @@ reifyLevels level l =
   where
     correctOffset o =
       stringCursorOffset $
-      foldMap (Rendering.haskell (Rendering.unleveled . snd)) $
+      foldMap (Rendering.haskell (Rendering.unleveledExtension . snd)) $
       catMaybes $
       flip evalState Position.zero $ forM l $ \ast -> do
         modify $ (Position.add ((stringCursorOffset . Rendering.haskell (const "Ѣ")) ast))
@@ -60,5 +60,5 @@ reifyExtensionForest level forest =
     undefined
 
 reifyExtension :: Level -> Placeholder -> Process Extension
-reifyExtension level (position, unleveled) =
+reifyExtension level (position, unleveledExtension) =
   undefined
