@@ -169,7 +169,7 @@ type_ =
           if strict then ("(!", "!)") else ("(~", "~)")
         field =
           (,) <$> (lowerCaseIdent <* skipMany space <* string "::" <* skipMany space) <*> 
-                  manyTill (haskell type_) (try (lookAhead (sep <|> end)))
+                  manyTill (haskell type_) (lookAhead (try sep <|> try end))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
