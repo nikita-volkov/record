@@ -22,9 +22,13 @@ type Process =
   ReaderT String (Either Error)
 
 
+parse :: Parse.Parse a -> String -> Process a
+parse p code =
+  ReaderT $ \name -> Parse.run p name code
+
 parseModule :: String -> Process (HaskellForest Placeholder)
-parseModule code =
-  ReaderT $ \name -> Parse.run (Parse.total (many (Parse.haskell Parse.placeholder))) name code
+parseModule =
+  parse (Parse.total (many (Parse.haskell Parse.placeholder)))
 
 -- |
 -- Detect levels of all top-level record splices.
