@@ -169,7 +169,7 @@ type_ =
   where
     record strict =
       fmap (Type_Record strict) $
-      string opening *> skipMany space *> sepBy1 field sep <* end
+      string opening *> skipMany space *> sepBy1 field (try sep) <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
@@ -201,7 +201,7 @@ exp =
         end =
           skipMany space <* string closing
         body =
-          sepBy1 (try assignment <|> nonAssignment) sep
+          sepBy1 (try assignment <|> nonAssignment) (try sep)
           where
             assignment =
               (,) <$> (lowerCaseIdent <* skipMany space <* string "=" <* skipMany space) <*> 
@@ -209,7 +209,7 @@ exp =
             nonAssignment =
               (,) <$> lowerCaseIdent <*> pure Nothing
             asts =
-              manyTill (haskell placeholder) (lookAhead (try sep <|> try end))
+              manyTill (haskell (placeholder)) (lookAhead (try sep <|> try end))
 
 
 -- * Pattern
@@ -222,7 +222,7 @@ pat =
   where
     record strict =
       fmap (Pat_Record strict) $
-      string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) sep <* end
+      string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) (try sep) <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
