@@ -20,7 +20,7 @@ type Error =
 
 run :: Parse a -> String -> String -> Either Error a
 run p n =
-  either (Left . (cursorOffset . errorPos &&& messageString . head . errorMessages)) Right .
+  either (Left . (cursorOffset . errorPos &&& intercalate "; " . fmap messageString . errorMessages)) Right .
   parse p n
   where
     cursorOffset p =
