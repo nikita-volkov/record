@@ -71,4 +71,4 @@ reifyExtension level (position, tree) =
     code = Rendering.unleveledExtension tree
     in case level of
       Level_Exp -> return . Extension_Exp =<< reifyExp =<< parse Parse.exp code
-      Level_Decl -> error "Unexpected declaration level"
+      Level_Type -> Extension_Type <$> parse Parse.type_ code 
