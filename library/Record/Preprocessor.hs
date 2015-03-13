@@ -11,7 +11,7 @@ import qualified Record.Preprocessor.Position as Position
 process :: String -> String -> Either Error String
 process name code =
   flip runReaderT name $ do
-    asts <- parse code
+    asts <- parseModule code
     levels <- reifyLevels Level_Decl asts
     undefined
 
@@ -22,8 +22,8 @@ type Process =
   ReaderT String (Either Error)
 
 
-parse :: String -> Process (HaskellForest Placeholder)
-parse code =
+parseModule :: String -> Process (HaskellForest Placeholder)
+parseModule code =
   ReaderT $ \name -> Parse.run (Parse.total (many (Parse.haskell Parse.placeholder))) name code
 
 -- |
@@ -51,8 +51,14 @@ reifyLevels level l =
 
 reifyExp :: Exp (HaskellForest Placeholder) -> Process (Exp (HaskellForest Extension))
 reifyExp =
-  traverse (reifyExtension Level_Exp)
+  traverse (reifyExtensionForest Level_Exp)
 
-reifyExtension :: Level -> HaskellForest Placeholder -> Process (HaskellForest Extension)
-reifyExtension =
+reifyExtensionForest :: Level -> HaskellForest Placeholder -> Process (HaskellForest Extension)
+reifyExtensionForest level forest =
+  do
+    sublevels <- reifyLevels level forest
+    undefined
+
+reifyExtension :: Level -> Placeholder -> Process Extension
+reifyExtension level (position, unleveled) =
   undefined
