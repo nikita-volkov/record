@@ -63,7 +63,10 @@ charLit =
       fmap pure (noneOf "'\\")
       where
         escapeSequence =
-          ('\\' :) <$> (char '\\' *> (fmap pure (char '\'') <|> many1 (noneOf "'")))
+          ('\\' :) <$> (char '\\' *> (fmap pure (char '\'') <|> many1 sequenceChar))
+          where
+            sequenceChar =
+              satisfy $ \c -> c /= '\'' && c /= '\\' && not (isSpace c)
 
 stringLit :: Parse String
 stringLit =
