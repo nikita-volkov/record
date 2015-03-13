@@ -46,6 +46,7 @@ withCursorOffset p =
 
 cursorOffset :: Parse Position.Position
 cursorOffset =
+  labeled "cursorOffset" $
   flip fmap getPosition $ \p ->
     (,) (pred $ fromIntegral $ sourceLine p) (pred $ fromIntegral $ sourceColumn p)
 
@@ -95,6 +96,7 @@ quasiQuote =
 
 lowerCaseQualifiedIdent :: Parse QualifiedIdent
 lowerCaseQualifiedIdent =
+  labeled "lowerCaseQualifiedIdent" $
   ((,) <$> many1 (upperCaseIdent <* char '.') <*> lowerCaseIdent) <|> 
   ((,) <$> pure [] <*> lowerCaseIdent)
 
@@ -121,6 +123,7 @@ upperCaseIdent =
 
 haskell :: Parse a -> Parse (Haskell a)
 haskell injection =
+  labeled "haskell" $
   (try $ Haskell_Extension <$> injection) <|>
   (try $ Haskell_CharLit <$> charLit) <|>
   (try $ Haskell_StringLit <$> stringLit) <|>
@@ -139,6 +142,7 @@ haskell injection =
 
 unleveledExtension :: Parse UnleveledExtension
 unleveledExtension =
+  labeled "unleveledExtension" $
   (try (UnleveledExtension_InBraces False <$> between (string "(~") (string "~)"))) <|>
   (UnleveledExtension_InBraces True <$> between (string "(!") (string "!)"))
   where
@@ -151,6 +155,7 @@ unleveledExtension =
 
 placeholder :: Parse Placeholder
 placeholder =
+  labeled "placeholder" $
   (,) <$> cursorOffset <*> unleveledExtension
 
 
@@ -159,6 +164,7 @@ placeholder =
 
 type_ :: Parse Type
 type_ =
+  labeled "type_" $
   try (record True) <|> (record False)
   where
     record strict =
@@ -181,6 +187,7 @@ type_ =
 
 exp :: Parse (Exp (HaskellForest Placeholder))
 exp =
+  labeled "exp" $
   try (record True) <|> (record False)
   where
     record strict =
@@ -210,6 +217,7 @@ exp =
 
 pat :: Parse Pat
 pat =
+  labeled "pat" $
   try (record True) <|> (record False)
   where
     record strict =
