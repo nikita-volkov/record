@@ -64,7 +64,7 @@ charLit =
       fmap pure (noneOf "'\\")
       where
         escapeSequence =
-          ('\\' :) <$> (char '\\' *> (fmap pure (char '\'') <|> many1 sequenceChar))
+          ('\\' :) <$> (char '\\' *> (try (fmap pure (char '\'')) <|> many1 sequenceChar))
           where
             sequenceChar =
               satisfy $ \c -> c /= '\'' && c /= '\\' && not (isSpace c)
@@ -97,8 +97,7 @@ quasiQuote =
 lowerCaseQualifiedIdent :: Parse QualifiedIdent
 lowerCaseQualifiedIdent =
   labeled "lowerCaseQualifiedIdent" $
-  ((,) <$> many1 (upperCaseIdent <* char '.') <*> lowerCaseIdent) <|> 
-  ((,) <$> pure [] <*> lowerCaseIdent)
+  (,) <$> many (upperCaseIdent <* char '.') <*> lowerCaseIdent
 
 lowerCaseIdent :: Parse String
 lowerCaseIdent = 
@@ -222,12 +221,12 @@ pat =
   where
     record strict =
       fmap (Pat_Record strict) $
-      string opening *> skipMany space *> sepBy1 (Left <$> lowerCaseIdent <|> Right <$> asts) (try sep) <* end
+      string opening *> skipMany space *> sepBy1 (Left <$> try lowerCaseIdent <|> Right <$> asts) (try sep) <* end
       where
         (opening, closing) = 
           if strict then ("(!", "!)") else ("(~", "~)")
         asts =
-          manyTill (haskell pat) (try (lookAhead (sep <|> end)))
+          manyTill (haskell pat) (lookAhead (try sep <|> try end))
         sep =
           skipMany space <* char ',' <* skipMany space
         end =
