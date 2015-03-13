@@ -10,10 +10,10 @@ import qualified Record.Preprocessor.Position as Position
 
 process :: String -> String -> Either Error String
 process name code =
-  flip runReaderT name $ do
-    asts <- parseModule code
-    levels <- reifyLevels Level_Decl asts
-    undefined
+  flip runReaderT name $ 
+    parseModule code >>=
+    reifyExtensionForest Level_Decl >>=
+    return . foldMap (Rendering.haskell Rendering.extension)
 
 type Error =
   (Position.Position, String)
@@ -71,4 +71,4 @@ reifyExtension level (position, tree) =
     code = Rendering.unleveledExtension tree
     in case level of
       Level_Exp -> return . Extension_Exp =<< reifyExp =<< parse Parse.exp code
-
+      Level_Decl -> error "Unexpected declaration level"

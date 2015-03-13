@@ -62,6 +62,5 @@ data Pat =
 
 data Extension =
   Extension_Type Type |
-  Extension_Exp (Exp (HaskellForest Extension)) |
-  Extension_Pat Pat
+  Extension_Exp (Exp (HaskellForest Extension))
   deriving (Show)

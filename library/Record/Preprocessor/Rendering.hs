@@ -1,6 +1,6 @@
 module Record.Preprocessor.Rendering where
 
-import Record.Prelude
+import Record.Prelude hiding (exp)
 import Record.Preprocessor.Model
 
 
@@ -72,3 +72,8 @@ exp inner =
         sortedSections =
           sortWith fst sections
 
+extension :: Extension -> String
+extension =
+  \case
+    Extension_Type x -> type_ x
+    Extension_Exp x -> exp (foldMap (haskell extension)) x
