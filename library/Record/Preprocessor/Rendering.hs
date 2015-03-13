@@ -43,11 +43,14 @@ type_ :: Type -> String
 type_ =
   \case
     Type_Record strict fields ->
-      (if strict then "StrictRecord" else "LazyRecord") <> show (length fields) <> " " <>
-      intercalate " " (map renderField fields)
+      "(" <>
+      (if strict then "Record.Types.StrictRecord" else "Record.Types.LazyRecord") <> 
+      show (length fields) <> " " <>
+      intercalate " " (map renderField fields) <>
+      ")"
       where
         renderField (name, asts) =
-          "\"" <> name <> "\" " <> foldMap (haskell type_) asts
+          "\"" <> name <> "\" (" <> foldMap (haskell type_) asts <> ")"
 
 exp :: (a -> String) -> Exp a -> String
 exp inner =
@@ -61,8 +64,12 @@ exp inner =
               fmap varName get
             Just a -> return $ "(" <> inner a <> ")"
         numArgs <- get
-        let exp = (if strict then "StrictRecord" else "LazyRecord") <> show (length sections) <>
-                  " " <> intercalate " " sectionStrings
+        let exp = 
+              "(" <>
+              (if strict then "Record.Types.StrictRecord" else "Record.Types.LazyRecord") <> 
+              show (length sections) <>
+              " " <> intercalate " " sectionStrings <>
+              ")"
         case numArgs of
           0 -> return $ exp
           n -> return $ "\\" <> intercalate " " (map varName [1 .. numArgs]) <> " -> " <> exp
