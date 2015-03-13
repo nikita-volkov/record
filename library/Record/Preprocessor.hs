@@ -61,7 +61,9 @@ reifyExtensionForest :: Level -> HaskellForest Placeholder -> Process (HaskellFo
 reifyExtensionForest level forest =
   do
     sublevels <- reifyLevels level forest
-    undefined
+    flip evalStateT sublevels $ flip (traverse . traverse) forest $ \placeholder -> StateT $ \case
+      head : tail -> liftM (, tail) (reifyExtension head placeholder)
+      _ -> error "Unexpected end of sublevels"
 
 reifyExtension :: Level -> Placeholder -> Process Extension
 reifyExtension level (position, tree) =
