@@ -155,8 +155,8 @@ qName c =
 name :: Level -> E.Name -> Levels
 name c =
   \case
-    E.Ident "Ъ" -> pure c
-    E.Symbol "Ъ" -> pure c
+    E.Ident "Ѣ" -> pure c
+    E.Symbol "Ѣ" -> pure c
     _ -> empty
 
 splice :: E.Splice -> Levels
