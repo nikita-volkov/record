@@ -136,8 +136,8 @@ haskell injection =
 
 unleveledExtension :: Parse UnleveledExtension
 unleveledExtension =
-  (try (UnleveledExtension_InLazyBraces <$> between (string "(~") (string "~)"))) <|>
-  (try (UnleveledExtension_InStrictBraces <$> between (string "(!") (string "!)")))
+  (try (UnleveledExtension_InBraces False <$> between (string "(~") (string "~)"))) <|>
+  (try (UnleveledExtension_InBraces True <$> between (string "(!") (string "!)")))
   where
     between opening closing =
       opening *> manyTill (haskell unleveledExtension) (try closing)

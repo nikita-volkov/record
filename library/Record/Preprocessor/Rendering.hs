@@ -7,8 +7,8 @@ import Record.Preprocessor.Model
 unleveledExtension :: UnleveledExtension -> String
 unleveledExtension =
   \case
-    UnleveledExtension_InLazyBraces x -> "(~" <> foldMap (haskell unleveledExtension) x <> "~)"
-    UnleveledExtension_InStrictBraces x -> "(!" <> foldMap (haskell unleveledExtension) x <> "!)"
+    UnleveledExtension_InBraces False x -> "(~" <> foldMap (haskell unleveledExtension) x <> "~)"
+    UnleveledExtension_InBraces True x -> "(!" <> foldMap (haskell unleveledExtension) x <> "!)"
 
 haskell :: (a -> String) -> Haskell a -> String
 haskell injection =

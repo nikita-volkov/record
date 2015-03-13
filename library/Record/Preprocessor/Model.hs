@@ -37,8 +37,7 @@ type HaskellForest a =
 
 
 data UnleveledExtension =
-  UnleveledExtension_InLazyBraces (HaskellForest UnleveledExtension) |
-  UnleveledExtension_InStrictBraces (HaskellForest UnleveledExtension)
+  UnleveledExtension_InBraces Bool (HaskellForest UnleveledExtension)
   deriving (Show)
 
 
