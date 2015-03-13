@@ -64,5 +64,9 @@ reifyExtensionForest level forest =
     undefined
 
 reifyExtension :: Level -> Placeholder -> Process Extension
-reifyExtension level (position, unleveledExtension) =
-  undefined
+reifyExtension level (position, tree) =
+  let 
+    code = Rendering.unleveledExtension tree
+    in case level of
+      Level_Exp -> return . Extension_Exp =<< reifyExp =<< parse Parse.exp code
+
