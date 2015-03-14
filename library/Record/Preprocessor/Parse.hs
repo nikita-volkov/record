@@ -116,6 +116,16 @@ upperCaseIdent =
     satisfy (\c -> isUpper c || c == '_') <*>
     (many . satisfy) (\c -> isAlphaNum c || c == '\'' || c == '_')
 
+comment :: Parse String
+comment =
+  labeled "comment" $
+  string "--" *> manyTill anyChar (lookAhead (try (void endOfLine) <|> try eof))
+
+multilineComment :: Parse String
+multilineComment =
+  labeled "multilineComment" $
+  string "{-" *> manyTill anyChar (try (string "-}"))
+
 
 -- * Haskell
 -------------------------
@@ -127,9 +137,11 @@ haskell injection =
   (try $ Haskell_CharLit <$> charLit) <|>
   (try $ Haskell_StringLit <$> stringLit) <|>
   (try $ Haskell_QuasiQuote <$> quasiQuote) <|>
+  (try $ Haskell_MultilineComment <$> multilineComment) <|>
   (try $ Haskell_InCurlies <$> enclosedIn '{' '}') <|>
   (try $ Haskell_InRoundies <$> enclosedIn '(' ')') <|>
   (try $ Haskell_InSquarelies <$> enclosedIn '[' ']') <|>
+  (try $ Haskell_Comment <$> comment) <|>
   (Haskell_Char <$> anyChar)
   where
     enclosedIn opening closing =

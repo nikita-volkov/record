@@ -33,7 +33,9 @@ data Haskell a =
   Haskell_InCurlies (HaskellForest a) |
   Haskell_InRoundies (HaskellForest a) |
   Haskell_InSquarelies (HaskellForest a) |
-  Haskell_Char Char
+  Haskell_Char Char |
+  Haskell_MultilineComment String |
+  Haskell_Comment String
   deriving (Show, Functor, Foldable, Traversable)
 
 type HaskellForest a =

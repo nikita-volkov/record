@@ -20,6 +20,8 @@ haskell injection =
     Haskell_InCurlies x -> "{" <> foldMap (haskell injection) x <> "}"
     Haskell_InRoundies x -> "(" <> foldMap (haskell injection) x <> ")"
     Haskell_InSquarelies x -> "[" <> foldMap (haskell injection) x <> "]"
+    Haskell_Comment x -> "--" <> x
+    Haskell_MultilineComment x -> "{-" <> x <> "-}"
     Haskell_Char x -> return x
 
 charLit :: String -> String
