@@ -4,6 +4,10 @@ import Record.Prelude
 import qualified Record.Preprocessor.Position as Position
 
 
+type Label =
+  String
+
+
 data Level =
   Level_Type |
   Level_Exp |

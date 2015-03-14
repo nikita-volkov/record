@@ -75,7 +75,7 @@ exp inner =
           n -> return $ "\\" <> intercalate " " (map varName [1 .. numArgs]) <> " -> " <> exp
       where
         varName n = 
-          "ѣ" <> show n
+          namespace <> show n
         sortedSections =
           sortWith fst sections
 
@@ -84,3 +84,11 @@ extension =
   \case
     Extension_Type x -> type_ x
     Extension_Exp x -> exp (foldMap (haskell extension)) x
+
+label :: Label -> String
+label s =
+  namespace <> ".fieldLens (" <> namespace <> ".Proxy :: " <> namespace <> ".Proxy \"" <> s <> "\")"
+
+namespace :: String
+namespace =
+  "ѣ"
