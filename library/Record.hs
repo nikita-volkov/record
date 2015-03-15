@@ -142,10 +142,10 @@ recordTypeNameByArity arity =
   [
     ''Types.Record1, ''Types.Record2, ''Types.Record3, ''Types.Record4, 
     ''Types.Record5, ''Types.Record6, ''Types.Record7, ''Types.Record8, 
-    ''Types.Record9, ''Types.Record10, ''Types.Record11, ''Types.Record12, 
-    ''Types.Record12, ''Types.Record13, ''Types.Record14, ''Types.Record15, 
+    ''Types.Record9, ''Types.Record10, ''Types.Record11, ''Types.Record12,
+    ''Types.Record13, ''Types.Record14, ''Types.Record15, 
     ''Types.Record16, ''Types.Record17, ''Types.Record18, ''Types.Record19, 
-    ''Types.Record20, ''Types.Record21, ''Types.Record22, ''Types.Record22, 
+    ''Types.Record20, ''Types.Record21, ''Types.Record22, 
     ''Types.Record23, ''Types.Record24
   ]
 
