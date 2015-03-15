@@ -1,3 +1,7 @@
+# 0.3.1
+* Support for arrow types
+* Higher arity bugs fix
+
 # 0.3.0
 * A bit of type renaming
 * Intances of `Storable`
