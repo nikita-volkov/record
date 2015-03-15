@@ -37,7 +37,7 @@ run p t =
 -- |
 -- Run a parser on a given input,
 -- lifting its errors to the context parser.
--- 
+--
 -- Consider it a subparser.
 parser :: Parser a -> Text -> Parser a
 parser p t =
@@ -55,50 +55,74 @@ qq p =
 -- |
 -- >>> run type' "(Int, Char)"
 -- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Char"))
--- 
+--
 -- >>> run type' "(,) Int Int"
 -- Right (Type_App (Type_App (Type_Tuple 2) (Type_Con "Int")) (Type_Con "Int"))
--- 
+--
 -- >>> run type' "(,)"
 -- Right (Type_Tuple 2)
--- 
+--
 -- >>> run type' "()"
 -- Right (Type_Tuple 0)
+--
+-- >>> run type' "Int -> Double"
+-- Right (Type_App (Type_App Type_Arrow (Type_Con "Int")) (Type_Con "Double"))
+--
+-- >>> run type' "(->) Int Double"
+-- Right (Type_App (Type_App Type_Arrow (Type_Con "Int")) (Type_Con "Double"))
+--
+-- >>> run type' "A -> B -> C"
+-- Right (Type_App (Type_App Type_Arrow (Type_Con "A")) (Type_App (Type_App Type_Arrow (Type_Con "B")) (Type_Con "C")))
 type' :: Parser Type
 type' =
   labeled "type'" $
-  appType <|> nonAppType
+  appArrowType <|> appType
   where
+    -- Matches "appType -> (type)+"
+    -- Note the right associativity of the arrow operator.
+    appArrowType = do
+      t <- appType
+      skipMany1 space
+      a <- arrowType
+      skipMany1 space
+      t' <- type'
+      return $ Type_App (Type_App a t) t'
+    -- Corresponds to GHC's "btype" rule
+    -- Matches either two or more types and "App"s them,
+    -- or a single type.
     appType =
-      fmap (foldl1 Type_App) $
-      sepBy1 nonAppType (skipMany1 space)
+      (foldl1 Type_App <$>
+      sepBy1 nonAppType (skipMany1 space))
+      <|> nonAppType
+    -- Corresponds to GHC's "atype" rule
     nonAppType =
-      varType <|> conType <|> tupleConType <|> tupleType <|> listConType <|> listType <|>
-      arrowType <|> (Type_Record <$> recordType) <|> inBraces type'
-      where
-        varType =
-          fmap Type_Var $ lowerCaseName
-        conType =
-          fmap Type_Con $ upperCaseIdent
-        tupleConType =
-          Type_Tuple 0 <$ string "()" <|>
-          Type_Tuple . succ . length <$> (char '(' *> many (char ',') <* char ')')
-        tupleType =
-          do
-            char '('
-            skipSpace
-            h <- type' <* skipSpace <* char ',' <* skipSpace
-            t <- sepBy1 type' (skipSpace *> char ',' <* skipSpace)
-            skipSpace
-            char ')'
-            return $ foldl Type_App (Type_Tuple (1 + length t)) $ h : t
-        listType =
-          fmap (Type_App Type_List) $
-            char '[' *> skipSpace *> type' <* skipSpace <* char ']'
-        listConType =
-          Type_List <$ string "[]"
-        arrowType =
-          Type_Arrow <$ string "->"
+      arrowTypeCon <|> conType <|> tupleConType <|> tupleType <|> listConType <|> listType <|>
+      varType <|> (Type_Record <$> recordType) <|> inBraces type'
+    varType =
+      fmap Type_Var $ lowerCaseName
+    conType =
+      fmap Type_Con $ upperCaseIdent
+    tupleConType =
+      Type_Tuple 0 <$ string "()" <|>
+      Type_Tuple . succ . length <$> (char '(' *> many (char ',') <* char ')')
+    tupleType =
+      do
+        char '('
+        skipSpace
+        h <- type' <* skipSpace <* char ',' <* skipSpace
+        t <- sepBy1 type' (skipSpace *> char ',' <* skipSpace)
+        skipSpace
+        char ')'
+        return $ foldl Type_App (Type_Tuple (1 + length t)) $ h : t
+    listType =
+      fmap (Type_App Type_List) $
+        char '[' *> skipSpace *> type' <* skipSpace <* char ']'
+    listConType =
+      Type_List <$ string "[]"
+    arrowTypeCon =
+      Type_Arrow <$ string "(->)"
+    arrowType =
+      Type_Arrow <$ string "->"
 
 recordType :: Parser RecordType
 recordType =
@@ -110,7 +134,7 @@ recordType =
 
 qualifiedName1 :: Parser QualifiedName
 qualifiedName1 =
-  ((\a b -> a <> pure b) <$> many1 (upperCaseName <* char '.') <*> lowerCaseName) <|> 
+  ((\a b -> a <> pure b) <$> many1 (upperCaseName <* char '.') <*> lowerCaseName) <|>
   (pure <$> lowerCaseName)
 
 inBraces :: Parser a -> Parser a
@@ -142,14 +166,14 @@ symbolicIdent =
 stringLit :: Parser Text
 stringLit =
   quoted '"'
-  where 
-    quoted q = 
+  where
+    quoted q =
       T.pack <$> (char q *> content <* char q)
       where
         content =
           many char'
           where
-            char' = 
+            char' =
               (char '\\' *> (char q <|> char '\\')) <|>
               (notChar q)
 
@@ -209,16 +233,16 @@ data Lit =
   deriving (Show)
 
 -- |
--- 
+--
 -- >>> run exp "(,)"
 -- Right (Exp_TupleCon 2)
--- 
+--
 -- >>> run exp "(1,2)"
 -- Right (Exp_App (Exp_App (Exp_TupleCon 2) (Exp_Lit (Lit_Integer 1))) (Exp_Lit (Lit_Integer 2)))
--- 
+--
 -- >>> run exp "(1)"
 -- Right (Exp_Lit (Lit_Integer 1))
--- 
+--
 -- >>> run exp "()"
 -- Right (Exp_TupleCon 0)
 exp :: Parser Exp
@@ -273,22 +297,22 @@ exp =
                 return $ foldl Exp_App (Exp_TupleCon (1 + length t)) $ h : t
             list =
               fmap Exp_List $
-                char '[' *> skipSpace *> 
+                char '[' *> skipSpace *>
                   sepBy1 exp (skipSpace *> char ',' <* skipSpace) <*
                   skipSpace <* char ']'
 
 -- |
--- 
+--
 -- Integers get parsed as integers:
--- 
+--
 -- >>> run lit "2"
 -- Right (Lit_Integer 2)
--- 
+--
 -- Rationals get parsed as rationals:
--- 
+--
 -- >>> run lit "2.0"
 -- Right (Lit_Rational (2 % 1))
--- 
+--
 -- >>> run lit "3e2"
 -- Right (Lit_Rational (300 % 1))
 lit :: Parser Lit
@@ -303,4 +327,3 @@ lit =
         case run (decimal <* endOfInput) t of
           Left _ -> return r
           _ -> mzero
-
