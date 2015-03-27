@@ -138,15 +138,19 @@ renderRecordType l =
 
 recordTypeNameByArity :: Int -> Maybe Name
 recordTypeNameByArity arity =
-    case ''Types.Record1 of
-      _ | arity > 24 -> Nothing
-      Name _ ns@(NameG {}) -> Just (Name (OccName ("Record"++show arity)) ns)
+  if arity > 24 || arity < 1
+    then Nothing
+    else Just (Name (OccName ("Record" <> show arity)) ns)
+  where
+    ns = case ''Types.Record1 of Name _ x -> x
 
 recordConNameByArity :: Int -> Maybe Name
 recordConNameByArity arity =
-    case 'Types.Record1 of
-      _ | arity > 24 -> Nothing
-      Name _ ns@(NameG {}) -> Just (Name (OccName ("Record"++show arity)) ns)
+  if arity > 24 || arity < 1
+    then Nothing
+    else Just (Name (OccName ("Record" <> show arity)) ns)
+  where
+    ns = case 'Types.Record1 of Name _ x -> x
 
 renderType :: Parser.Type -> Either String Type
 renderType =
