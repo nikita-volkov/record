@@ -10,6 +10,7 @@ where
 
 import BasePrelude
 import Language.Haskell.TH
+import Language.Haskell.TH.Syntax
 import Language.Haskell.TH.Quote
 import qualified Record.Types as Types
 import qualified Record.Lens as Lens
@@ -137,31 +138,15 @@ renderRecordType l =
 
 recordTypeNameByArity :: Int -> Maybe Name
 recordTypeNameByArity arity =
-  fmap head $ mfilter (not . null) $ Just $
-  drop (pred arity) $
-  [
-    ''Types.Record1, ''Types.Record2, ''Types.Record3, ''Types.Record4, 
-    ''Types.Record5, ''Types.Record6, ''Types.Record7, ''Types.Record8, 
-    ''Types.Record9, ''Types.Record10, ''Types.Record11, ''Types.Record12,
-    ''Types.Record13, ''Types.Record14, ''Types.Record15, 
-    ''Types.Record16, ''Types.Record17, ''Types.Record18, ''Types.Record19, 
-    ''Types.Record20, ''Types.Record21, ''Types.Record22, 
-    ''Types.Record23, ''Types.Record24
-  ]
+    case ''Types.Record1 of
+      _ | arity > 24 -> Nothing
+      Name _ ns@(NameG {}) -> Just (Name (OccName ("Record"++show arity)) ns)
 
 recordConNameByArity :: Int -> Maybe Name
 recordConNameByArity arity =
-  fmap head $ mfilter (not . null) $ Just $
-  drop (pred arity) $
-  [
-    'Types.Record1, 'Types.Record2, 'Types.Record3, 'Types.Record4, 
-    'Types.Record5, 'Types.Record6, 'Types.Record7, 'Types.Record8, 
-    'Types.Record9, 'Types.Record10, 'Types.Record11, 'Types.Record12, 
-    'Types.Record12, 'Types.Record13, 'Types.Record14, 'Types.Record15, 
-    'Types.Record16, 'Types.Record17, 'Types.Record18, 'Types.Record19, 
-    'Types.Record20, 'Types.Record21, 'Types.Record22, 'Types.Record22, 
-    'Types.Record23, 'Types.Record24
-  ]
+    case 'Types.Record1 of
+      _ | arity > 24 -> Nothing
+      Name _ ns@(NameG {}) -> Just (Name (OccName ("Record"++show arity)) ns)
 
 renderType :: Parser.Type -> Either String Type
 renderType =
