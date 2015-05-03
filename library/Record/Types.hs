@@ -32,14 +32,14 @@ import Foreign.Ptr (plusPtr)
 -- Here's how you can use it with tuples:
 --
 -- >trd :: Field "3" v v' a' a => a -> v
--- >trd = view . fieldLens (FieldName :: FieldName "3")
+-- >trd = view . fieldLens (undefined :: FieldName "3")
 -- The function above will get you the third item of any tuple, which has it.
 class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
   -- |
   -- A polymorphic lens. E.g.:
   --
   -- >ageLens :: Field "age" v v' a' a => Lens a a' v v'
-  -- >ageLens = fieldLens (FieldName :: FieldName "age")
+  -- >ageLens = fieldLens (undefined :: FieldName "age")
   fieldLens :: FieldName n -> Lens a a' v v'
 
 -- |
