@@ -38,7 +38,7 @@ install:
       $([ "$tests" = "1" ] && echo "--enable-tests")
       $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
   # Build the library
-  - cabal build
+  - travis_wait cabal build
   # Configure and build the remaining stuff
   - cabal configure 
       $([ "$tests" = "1" ] && echo "--enable-tests")
@@ -50,5 +50,5 @@ script:
   - |
     if [ "$tests" = "1" ];
     then
-      cabal test --show-details=always;
+      travis_wait cabal test --show-details=always;
     fi;
