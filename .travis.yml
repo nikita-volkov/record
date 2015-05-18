@@ -35,6 +35,7 @@ install:
     then
       constraint_options=(
         "--constraint=transformers==0.3.*"
+        "--constraint=attoparsec==0.12.*"
       );
     fi;
   # Install the library dependencies
