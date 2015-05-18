@@ -119,7 +119,6 @@ benchmark demo
     -threaded
     "-with-rtsopts=-N"
     -funbox-strict-fields
-    -ddump-splices
   default-language:
     Haskell2010
   build-depends:
