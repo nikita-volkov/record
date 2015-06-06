@@ -31,9 +31,8 @@ import qualified Record.TH as TH
 -- >trd = view (fieldLens (undefined :: FieldName "3"))
 -- 
 -- The function above will get you the third item of any tuple, which has it.
-class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a, n a v -> v' where
-  setField :: FieldName n -> v' -> a -> a'
-  getField :: FieldName n -> a -> v
+class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
+  fieldLens :: FieldName n -> Lens a a' v v'
 
 -- |
 -- A simplified field constraint,
@@ -47,9 +46,25 @@ type Field' n a v =
 -- since @Proxy@ was only defined in \"base-4.7\".
 data FieldName (t :: Symbol)
 
-fieldLens :: Field n a a' v v' => FieldName n -> Lens a a' v v'
-fieldLens n =
-  \f a -> fmap (\v -> setField n v a) (f (getField n a))
 
--- Generate Record types
-return $ TH.recordTypeDec <$> [False, True] <*> [1 .. 42]
+-- * Record types and instances
+-------------------------
+
+-- Generate record types and instances:
+return $ do
+  arity <- [1 .. 24]
+  strict <- [False, True]
+  let
+    recordType =
+      TH.recordTypeDec strict arity
+    recordFieldInstances =
+      do
+        fieldIndex <- [1 .. arity]
+        return $ TH.recordFieldInstanceDec strict arity fieldIndex
+    in recordType : recordFieldInstances
+
+-- Generate tuple instances of the Field class:
+return $ do
+  arity <- [2 .. 24]
+  fieldIndex <- [1 .. arity]
+  return $ TH.tupleFieldInstanceDec arity fieldIndex
