@@ -13,10 +13,10 @@ module Record where
 import BasePrelude hiding (Proxy)
 import Data.Functor.Identity
 import GHC.TypeLits
-import Language.Haskell.TH
 import Foreign.Storable
 import Foreign.Ptr (plusPtr)
 import Control.Lens.Basic
+import qualified Record.TH as TH
 
 
 -- |
@@ -50,3 +50,6 @@ data FieldName (t :: Symbol)
 fieldLens :: Field n a a' v v' => FieldName n -> Lens a a' v v'
 fieldLens n =
   \f a -> fmap (\v -> setField n v a) (f (getField n a))
+
+-- Generate Record types
+return $ TH.recordTypeDec <$> [False, True] <*> [1 .. 42]

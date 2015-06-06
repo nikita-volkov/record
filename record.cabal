@@ -58,6 +58,7 @@ library
   default-language:
     Haskell2010
   other-modules:
+    Record.TH
   exposed-modules:
     Record
   build-depends:
