@@ -65,3 +65,10 @@ return $ do
     storableInstance =
       TH.recordStorableInstanceDec strict arity
     in recordType : storableInstance : fieldInstances
+
+
+-- * Record construction functions with field names
+-------------------------
+
+-- Generate the function declarations:
+return $ concat $ TH.recordConFunDecs <$> [False, True] <*> [1 .. 24]

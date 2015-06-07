@@ -42,7 +42,11 @@ recordTypeDec strict arity =
 
 recordName :: Bool -> Int -> Name
 recordName strict arity =
-  mkName $ prefix <> "Record" <> show arity
+  mkName $ recordNameString strict arity
+
+recordNameString :: Bool -> Int -> String
+recordNameString strict arity =
+  prefix <> "Record" <> show arity
   where
     prefix =
       if strict then "Strict" else "Lazy"
@@ -181,3 +185,69 @@ recordStorableInstanceDec strict arity =
                                                           (sizeOfFun' (i - 1))))
                                              (nameE ("v" <> show i)))) [1..arity])) [])]
     inlineFun name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
+
+recordConFunDecs :: Bool -> Int -> [Dec]
+recordConFunDecs strict arity =
+  [inline, fun]
+  where
+    inline =
+      PragmaD (InlineP name Inline FunLike AllPhases)
+    fun =
+      FunD name [Clause [] (NormalB (recordConLambdaExp strict arity)) []]
+    name =
+      mkName string
+      where
+        string =
+          onHead toLower (recordNameString strict arity)
+          where
+            onHead f =
+              \case
+                a : b -> f a : b
+                [] -> []
+
+-- |
+-- Allows to specify field names at value-level.
+-- Useful for type-inference.
+-- 
+-- E.g., in
+-- 
+-- >(\_ v1 _ v2 -> StrictRecord2 v1 v2) :: Types.FieldName n1 -> v1 -> Types.FieldName n2 -> v2 -> StrictRecord2 n1 v1 n2 v2
+-- 
+-- we can set the name signatures by passing
+-- the name-proxies to this lambda.
+recordConLambdaExp :: Bool -> Int -> Exp
+recordConLambdaExp strict arity =
+  SigE exp t
+  where
+    name =
+      recordName strict arity
+    exp =
+      LamE pats exp
+      where
+        pats =
+          concat $ flip map [1 .. arity] $ \i -> [WildP, VarP (mkName ("v" <> show i))]
+        exp =
+          foldl AppE (ConE name) (map (\i -> VarE (mkName ("v" <> show i))) [1 .. arity])
+    t =
+      fnType name
+      where
+        fnType conName =
+          ForallT varBndrs [] $
+          foldr1 (\l r -> AppT (AppT ArrowT l) r)
+                 (argTypes <> pure (resultType conName))
+        varBndrs =
+          concat $ flip map [1 .. arity] $ \i ->
+            PlainTV (mkName ("n" <> show i)) :
+            PlainTV (mkName ("v" <> show i)) :
+            []
+        argTypes =
+          concat $ flip map [1 .. arity] $ \i -> 
+            AppT (ConT (mkName "FieldName")) (VarT (mkName ("n" <> show i))) :
+            VarT (mkName ("v" <> show i)) :
+            []
+        resultType conName =
+          foldl AppT (ConT conName) $ concat $ flip map [1 .. arity] $ \i ->
+            VarT (mkName ("n" <> show i)) :
+            VarT (mkName ("v" <> show i)) :
+            []
+
