@@ -15,7 +15,7 @@ classP = ClassP
 
 recordTypeDec :: Bool -> Int -> Dec
 recordTypeDec strict arity =
-  DataD [] name varBndrs [NormalC name conTypes] []
+  DataD [] name varBndrs [NormalC name conTypes] derivingNames
   where
     name =
       recordName strict arity
@@ -33,6 +33,12 @@ recordTypeDec strict arity =
       where
         strictness =
           if strict then IsStrict else NotStrict
+    derivingNames =
+#if MIN_VERSION_base(4,7,0)
+      [''Show, ''Eq, ''Ord, ''Typeable, ''Generic]
+#else
+      [''Show, ''Eq, ''Ord, ''Generic]
+#endif
 
 recordName :: Bool -> Int -> Name
 recordName strict arity =
