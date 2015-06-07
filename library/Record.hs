@@ -60,7 +60,9 @@ return $ do
       do
         fieldIndex <- [1 .. arity]
         return $ TH.recordFieldInstanceDec strict arity fieldIndex
-    in recordType : recordFieldInstances
+    storableInstance =
+      TH.recordStorableInstanceDec strict arity
+    in recordType : storableInstance : recordFieldInstances
 
 -- Generate tuple instances of the Field class:
 return $ do

@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Record.TH where
 
 import BasePrelude hiding (Proxy)
@@ -5,8 +6,15 @@ import Data.Functor.Identity
 import GHC.TypeLits
 import Foreign.Storable
 import Foreign.Ptr (plusPtr)
-import Language.Haskell.TH
+import Language.Haskell.TH hiding (classP)
 
+
+classP :: Name -> [Type] -> Pred
+#if MIN_VERSION_template_haskell(2,10,0)
+classP n tl = foldl AppT (ConT n) tl
+#else
+classP = ClassP
+#endif
 
 recordTypeDec :: Bool -> Int -> Dec
 recordTypeDec strict arity =
@@ -112,3 +120,61 @@ fieldInstanceDec mode arity fieldIndex =
                       map (\(i, n) -> if i == fieldIndex then selectedVPrimeVarName
                                                          else mkName ("v" <> show i)) $
                       zip [1 .. arity] indexedVVarNames
+
+recordStorableInstanceDec :: Bool -> Int -> Dec
+recordStorableInstanceDec strict arity =
+  InstanceD context (AppT (ConT (mkName "Storable")) recordType)
+            [sizeOfFun, inlineFun "sizeOf", alignmentFun, inlineFun "alignment"
+            , peekFun, inlineFun "peek", pokeFun, inlineFun "poke"]
+  where
+    name = recordName strict arity
+    recordType =
+      foldl (\a i -> AppT (AppT a (VarT (mkName ("n" <> show i))))
+                          (VarT (mkName ("v" <> show i))))
+            (ConT name)
+            [1 .. arity]
+    context = map (\i -> classP (mkName "Storable")  [VarT (mkName ("v" <> show i))])
+              [1 .. arity]
+    nameE = VarE . mkName
+    -- The sum of the sizes of all types
+    sizeOfFun' n = foldr (\a b -> AppE (AppE (nameE "+") a) b) (LitE (IntegerL 0)) $
+                   map (\i -> AppE
+                              (nameE "sizeOf")
+                              (SigE (nameE "undefined")
+                                    (VarT (mkName ("v" <> show i)))))
+                   [1..n]
+    sizeOfFun = FunD (mkName "sizeOf")
+                [Clause [WildP]
+                 (NormalB (sizeOfFun' arity)) []]
+    -- Set the alignment to the maximum alignment of the types
+    alignmentFun = FunD (mkName "alignment")
+                   [(Clause [WildP]
+                     (NormalB (AppE (nameE "maximum") $ ListE $
+                               map (\i -> AppE
+                                          (nameE "sizeOf")
+                                          (SigE (nameE "undefined")
+                                                (VarT (mkName ("v" <> show i)))))
+                               [1..arity])) [])]
+    -- Peek every variable, remember to add the size of the elements already seen to the ptr
+    peekFun = FunD (mkName "peek")
+              [(Clause [VarP (mkName "ptr")]
+                  (NormalB (DoE $ map (\i -> BindS
+                                             (BangP (VarP (mkName ("x" <> show i))))
+                                                    (AppE (nameE "peek")
+                                                          (AppE (AppE (nameE "plusPtr")
+                                                                      (nameE "ptr"))
+                                                                (sizeOfFun' (i - 1))))) [1..arity]
+                                 ++ [NoBindS (AppE (nameE "return")
+                                             (foldl (\a i -> AppE a (nameE ("x" <> show i)))
+                                             (ConE name) [1 .. arity]))])) [])]
+    typePattern = ConP name (map (\i -> VarP (mkName ("v" <> show i))) [1..arity])
+    pokeFun = FunD (mkName "poke")
+              [(Clause [VarP (mkName "ptr"), typePattern]
+                 (NormalB (DoE $ map (\i -> NoBindS
+                                            (AppE
+                                             (AppE (VarE (mkName "poke"))
+                                                   (AppE (AppE (nameE "plusPtr")
+                                                                 (nameE "ptr"))
+                                                          (sizeOfFun' (i - 1))))
+                                             (nameE ("v" <> show i)))) [1..arity])) [])]
+    inlineFun name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
