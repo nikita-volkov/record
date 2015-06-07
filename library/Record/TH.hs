@@ -2,10 +2,7 @@
 module Record.TH where
 
 import BasePrelude hiding (Proxy)
-import Data.Functor.Identity
 import GHC.TypeLits
-import Foreign.Storable
-import Foreign.Ptr (plusPtr)
 import Language.Haskell.TH hiding (classP)
 
 
