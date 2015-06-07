@@ -8,11 +8,7 @@ description:
   This library provides the abstractions behind the anonymous record syntax.
   It is intended to be used in conjunction with
   <http://hackage.haskell.org/package/record-preprocessor the "record-preprocessor">,
-  which provides a native syntactic support.
-  .
-  Links:
-  .
-  * <http://nikita-volkov.github.io/record An extensive introduction to the library>.
+  which enables a Haskell syntax extension.
 category:
   Control, Data Structures, Records
 homepage:
