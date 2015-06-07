@@ -58,10 +58,10 @@ return $ do
   let
     recordType =
       TH.recordTypeDec strict arity
-    recordFieldInstances =
+    fieldInstances =
       do
         fieldIndex <- [1 .. arity]
         return $ TH.recordFieldInstanceDec strict arity fieldIndex
     storableInstance =
       TH.recordStorableInstanceDec strict arity
-    in recordType : storableInstance : recordFieldInstances
+    in recordType : storableInstance : fieldInstances
