@@ -19,6 +19,12 @@ import qualified Record.TH as TH
 
 
 -- |
+-- A specialised version of "Data.Proxy.Proxy".
+-- Defined for compatibility with \"base-4.6\",
+-- since @Proxy@ was only defined in \"base-4.7\".
+data FieldName (t :: Symbol)
+
+-- |
 -- Defines a lens to manipulate some value of a type by a type-level name,
 -- using the string type literal functionality.
 --
@@ -33,23 +39,26 @@ import qualified Record.TH as TH
 class Field (n :: Symbol) a a' v v' | n a -> v, n a' -> v', n a v' -> a', n a' v -> a where
   fieldLens :: FieldName n -> Lens a a' v v'
 
+instance Field "1" (Identity v1) (Identity v1') v1 v1' where
+  fieldLens = const $ \f -> fmap Identity . f . runIdentity
+
+-- Generate the tuple instances of the Field class:
+return $ do
+  arity <- [2 .. 24]
+  fieldIndex <- [1 .. arity]
+  return $ TH.tupleFieldInstanceDec arity fieldIndex
+
 -- |
 -- A simplified field constraint,
 -- which excludes the possibility of type-changing updates.
 type Field' n a v =
   Field n a a v v
 
--- |
--- A specialised version of "Data.Proxy.Proxy".
--- Defined for compatibility with \"base-4.6\",
--- since @Proxy@ was only defined in \"base-4.7\".
-data FieldName (t :: Symbol)
-
 
 -- * Record types and instances
 -------------------------
 
--- Generate record types and instances:
+-- Generate the record types and instances:
 return $ do
   arity <- [1 .. 24]
   strict <- [False, True]
@@ -63,12 +72,3 @@ return $ do
     storableInstance =
       TH.recordStorableInstanceDec strict arity
     in recordType : storableInstance : recordFieldInstances
-
-instance Field "1" (Identity v1) (Identity v1') v1 v1' where
-  fieldLens = const $ \f -> fmap Identity . f . runIdentity
-
--- Generate tuple instances of the Field class:
-return $ do
-  arity <- [2 .. 24]
-  fieldIndex <- [1 .. arity]
-  return $ TH.tupleFieldInstanceDec arity fieldIndex
