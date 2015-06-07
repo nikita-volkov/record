@@ -1,12 +1,5 @@
 -- |
--- The contents of this module may seem a bit overwhelming.
--- Don't worry,
--- all it does is just cover instances and datatypes of records and tuples of
--- huge arities.
---
--- You don't actually need to ever use this module,
--- since all the functionality you may need is presented
--- by the quasiquoters exported in the root module.
+-- Types and instances of anonymous records.
 module Record where
 
 import BasePrelude hiding (Proxy)
