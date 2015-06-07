@@ -64,6 +64,9 @@ return $ do
       TH.recordStorableInstanceDec strict arity
     in recordType : storableInstance : recordFieldInstances
 
+instance Field "1" (Identity v1) (Identity v1') v1 v1' where
+  fieldLens = const $ \f -> fmap Identity . f . runIdentity
+
 -- Generate tuple instances of the Field class:
 return $ do
   arity <- [2 .. 24]
