@@ -1,3 +1,9 @@
+# 0.4.0
+* Drop the quasi-quoters
+* Drop the "Lens" module in preference to a dependency on the "basic-lens" library
+* Generate strict record types
+* Export the types from the root module
+
 # 0.3.1
 * Support for arrow types
 * Higher arity bugs fix

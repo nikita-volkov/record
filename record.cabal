@@ -1,21 +1,16 @@
 name:
   record
 version:
-  0.3.1.2
+  0.4.0.0
 synopsis:
-  First class records implemented with quasi-quotation
+  Anonymous records
 description:
-  An API of just two quasi-quoters, 
-  providing a full-scale solution to the notorious records problem of Haskell.
-  .
-  Links:
-  .
-  * <http://nikita-volkov.github.io/record A comprehensive introduction to the library>.
-  .
-  * <https://github.com/nikita-volkov/record/blob/master/demo/Main.hs Demo>.
-  .
+  This library provides the abstractions behind the anonymous record syntax.
+  It is intended to be used in conjunction with
+  <http://hackage.haskell.org/package/record-preprocessor the "record-preprocessor">,
+  which enables a Haskell syntax extension.
 category:
-  Control, Data Structures
+  Control, Data Structures, Records
 homepage:
   https://github.com/nikita-volkov/record 
 bug-reports:
@@ -31,7 +26,7 @@ license:
 license-file:
   LICENSE
 build-type:
-  Custom
+  Simple
 cabal-version:
   >=1.10
 extra-source-files:
@@ -45,82 +40,21 @@ source-repository head
     git://github.com/nikita-volkov/record.git
 
 
-flag doctest
-  description: Build Doctests
-  default: True
-  manual: True
-
-
 library
   hs-source-dirs:
     library
-  ghc-options:
-    -funbox-strict-fields
   default-extensions:
     Arrows, BangPatterns, ConstraintKinds, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFunctor, DeriveGeneric, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, ImpredicativeTypes, LambdaCase, LiberalTypeSynonyms, MagicHash, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeFamilies, TypeOperators, UnboxedTuples
   default-language:
     Haskell2010
   other-modules:
-    Record.Parser
+    Record.TH
   exposed-modules:
-    Record.Types
-    Record.Lens
     Record
   build-depends:
     -- 
-    attoparsec >= 0.12 && < 0.14,
+    template-haskell == 2.*,
     -- 
-    text,
-    --
-    template-haskell,
-    -- 
-    transformers >= 0.2 && < 0.5,
+    basic-lens == 0.0.*,
     base-prelude >= 0.1 && < 0.2,
     base >= 4.6 && < 4.9
-
-
-test-suite doctest
-  type:
-    exitcode-stdio-1.0
-  hs-source-dirs:
-    doctest
-  main-is:
-    Main.hs
-  ghc-options:
-    -threaded
-    "-with-rtsopts=-N"
-    -funbox-strict-fields
-  default-extensions:
-    Arrows, BangPatterns, ConstraintKinds, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFunctor, DeriveGeneric, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, ImpredicativeTypes, LambdaCase, LiberalTypeSynonyms, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeFamilies, TypeOperators
-  default-language:
-    Haskell2010
-  if !flag(doctest)
-    buildable: False
-  build-depends:
-    doctest == 0.9.*,
-    directory == 1.2.*,
-    filepath >= 1.3 && < 1.5,
-    base-prelude,
-    base
-
-
--- Well, it's not a benchmark actually, 
--- but in Cabal there's no cleaner way to specify an executable, 
--- which is not intended for distribution.
-benchmark demo
-  type: 
-    exitcode-stdio-1.0
-  hs-source-dirs:
-    demo
-  main-is:
-    Main.hs
-  ghc-options:
-    -O2
-    -threaded
-    "-with-rtsopts=-N"
-    -funbox-strict-fields
-  default-language:
-    Haskell2010
-  build-depends:
-    record,
-    base-prelude
