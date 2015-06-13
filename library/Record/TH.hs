@@ -188,10 +188,37 @@ recordStorableInstanceDec strict arity =
 
 recordConFunDecs :: Bool -> Int -> [Dec]
 recordConFunDecs strict arity =
-  [inline, fun]
+  [inline, signature, fun]
   where
     inline =
       PragmaD (InlineP name Inline FunLike AllPhases)
+    signature =
+      SigD name type_
+      where
+        type_ =
+          ForallT varBndrs [] $
+          foldr AppT recordType $
+          map (AppT ArrowT) $
+          interleave nameProxyTypes valueVariableTypes
+          where
+            varBndrs =
+              map PlainTV $
+              interleave nameVariableNames valueVariableNames
+            recordType =
+              foldl' AppT (ConT (recordName strict arity)) $ 
+              interleave nameVariableTypes valueVariableTypes
+            valueVariableTypes =
+              map VarT valueVariableNames
+            valueVariableNames =
+              map (\i -> mkName ("v" <> show i)) [1 .. arity]
+            nameVariableTypes =
+              map VarT nameVariableNames
+            nameVariableNames =
+              map (\i -> mkName ("n" <> show i)) [1 .. arity]
+            nameProxyTypes =
+              map (AppT (ConT (mkName "FieldName"))) nameVariableTypes
+            interleave a b =
+              join $ zipWith (\a b -> [a, b]) a b
     fun =
       FunD name [Clause [] (NormalB (recordConLambdaExp strict arity)) []]
     name =
