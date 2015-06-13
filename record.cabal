@@ -1,7 +1,7 @@
 name:
   record
 version:
-  0.4.0.0
+  0.4.0.1
 synopsis:
   Anonymous records
 description:
@@ -55,6 +55,7 @@ library
     -- 
     template-haskell == 2.*,
     -- 
+    transformers >= 0.2 && < 0.5,
     basic-lens == 0.0.*,
     base-prelude >= 0.1 && < 0.2,
     base >= 4.6 && < 4.9
