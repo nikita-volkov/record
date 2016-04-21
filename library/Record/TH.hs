@@ -15,7 +15,11 @@ classP = ClassP
 
 recordTypeDec :: Bool -> Int -> Dec
 recordTypeDec strict arity =
+#if MIN_VERSION_template_haskell(2,11,0)  
+  DataD [] name varBndrs Nothing [NormalC name conTypes] derivingNames
+#else
   DataD [] name varBndrs [NormalC name conTypes] derivingNames
+#endif
   where
     name =
       recordName strict arity
@@ -32,8 +36,17 @@ recordTypeDec strict arity =
         return $ (,) strictness (VarT (mkName ("v" <> show i)))
       where
         strictness =
+#if MIN_VERSION_template_haskell(2,11,0)          
+          if strict then Bang NoSourceUnpackedness SourceStrict else Bang NoSourceUnpackedness NoSourceStrictness
+#else
           if strict then IsStrict else NotStrict
+#endif
+
     derivingNames =
+#if MIN_VERSION_template_haskell(2,11,0)
+      map ConT
+#endif
+      
 #if MIN_VERSION_base(4,7,0)
       [''Show, ''Eq, ''Ord, ''Typeable, ''Generic]
 #else
