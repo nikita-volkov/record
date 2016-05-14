@@ -171,7 +171,7 @@ recordStorableInstanceDec strict arity =
                    [(Clause [WildP]
                      (NormalB (AppE (nameE "maximum") $ ListE $
                                map (\i -> AppE
-                                          (nameE "sizeOf")
+                                          (nameE "alignment")
                                           (SigE (nameE "undefined")
                                                 (VarT (mkName ("v" <> show i)))))
                                [1..arity])) [])]
