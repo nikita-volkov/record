@@ -144,8 +144,8 @@ fieldInstanceDec mode arity fieldIndex =
 recordStorableInstanceDec :: Bool -> Int -> Dec
 recordStorableInstanceDec strict arity =
   InstanceD context (AppT (ConT (mkName "Storable")) recordType)
-            [sizeOfFun, inlineFun "sizeOf", alignmentFun, inlineFun "alignment"
-            , peekFun, inlineFun "peek", pokeFun, inlineFun "poke"]
+            [sizeOfD, inlineP "sizeOf", alignmentD, inlineP "alignment"
+            , peekD, inlineP "peek", pokeD, inlineP "poke"]
   where
     name = recordName strict arity
     recordType =
@@ -154,50 +154,86 @@ recordStorableInstanceDec strict arity =
             (ConT name)
             [1 .. arity]
     context = map (\i -> classP (mkName "Storable")  [VarT (mkName ("v" <> show i))])
-              [1 .. arity]
-    nameE = VarE . mkName
-    -- The sum of the sizes of all types
-    sizeOfFun' n = foldr (\a b -> AppE (AppE (nameE "+") a) b) (LitE (IntegerL 0)) $
-                   map (\i -> AppE
-                              (nameE "sizeOf")
-                              (SigE (nameE "undefined")
-                                    (VarT (mkName ("v" <> show i)))))
-                   [1..n]
-    sizeOfFun = FunD (mkName "sizeOf")
-                [Clause [WildP]
-                 (NormalB (sizeOfFun' arity)) []]
-    -- Set the alignment to the maximum alignment of the types
-    alignmentFun = FunD (mkName "alignment")
-                   [(Clause [WildP]
-                     (NormalB (AppE (nameE "maximum") $ ListE $
-                               map (\i -> AppE
-                                          (nameE "alignment")
-                                          (SigE (nameE "undefined")
-                                                (VarT (mkName ("v" <> show i)))))
-                               [1..arity])) [])]
-    -- Peek every variable, remember to add the size of the elements already seen to the ptr
-    peekFun = FunD (mkName "peek")
-              [(Clause [VarP (mkName "ptr")]
-                  (NormalB (DoE $ map (\i -> BindS
-                                             (BangP (VarP (mkName ("x" <> show i))))
-                                                    (AppE (nameE "peek")
-                                                          (AppE (AppE (nameE "plusPtr")
-                                                                      (nameE "ptr"))
-                                                                (sizeOfFun' (i - 1))))) [1..arity]
-                                 ++ [NoBindS (AppE (nameE "return")
-                                             (foldl (\a i -> AppE a (nameE ("x" <> show i)))
-                                             (ConE name) [1 .. arity]))])) [])]
-    typePattern = ConP name (map (\i -> VarP (mkName ("v" <> show i))) [1..arity])
-    pokeFun = FunD (mkName "poke")
-              [(Clause [VarP (mkName "ptr"), typePattern]
-                 (NormalB (DoE $ map (\i -> NoBindS
-                                            (AppE
-                                             (AppE (VarE (mkName "poke"))
-                                                   (AppE (AppE (nameE "plusPtr")
-                                                                 (nameE "ptr"))
-                                                          (sizeOfFun' (i - 1))))
-                                             (nameE ("v" <> show i)))) [1..arity])) [])]
-    inlineFun name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
+                  [1 .. arity]
+    inlineP name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
+    -- Decs a_k = alignment, s_k = size, b_k = begin offset, e_k = end+1 offset
+    calcDs = map alignmentkD [1 .. arity] ++
+             map sizekD      [1 .. arity] ++
+             begin0D : map beginkD [1 .. arity] ++
+             end0D   : map endkD   [1 .. arity]
+      where
+        -- Dec a_k = alignment (undefined :: v_k)
+        alignmentkD k = ValD (VarP (mkName ("a" <> show k)))
+                             (NormalB (AppE (VarE (mkName "alignment"))
+                                            (SigE (AppE (VarE (mkName "error"))
+                                                        (LitE (StringL "non-constant alignment not supported")))
+                                                  (VarT (mkName ("v" <> show k))))))
+                             []
+        -- Dec s_k = sizeOf (undefined :: v_k)
+        sizekD k = ValD (VarP (mkName ("s" <> show k)))
+                        (NormalB (AppE (VarE (mkName "sizeOf"))
+                                       (SigE (AppE (VarE (mkName "error"))
+                                                   (LitE (StringL "non-constant sizeOf not supported")))
+                                             (VarT (mkName ("v" <> show k))))))
+                        []
+        -- Dec b_k = e_{k-1} + ((-e_{k-1}) `mod` a_k)
+        begin0D = ValD (VarP (mkName "b0")) (NormalB (LitE (IntegerL 0))) []
+        beginkD k = ValD (VarP (mkName ("b" <> show k)))
+                         (NormalB (UInfixE (VarE (mkName ("e" <> show (k-1))))
+                                           (VarE (mkName "+"))
+                                           (UInfixE (AppE (VarE (mkName "negate"))
+                                                          (VarE (mkName ("e" <> show (k-1)))))
+                                                    (VarE (mkName "mod"))
+                                                    (VarE (mkName ("a" <> show k))))))
+                         []
+        -- Dec e_k = b_k + s_k
+        end0D = ValD (VarP (mkName "e0")) (NormalB (LitE (IntegerL 0))) []
+        endkD k = ValD (VarP (mkName ("e" <> show k)))
+                       (NormalB (UInfixE (VarE (mkName ("b" <> show k)))
+                                         (VarE (mkName "+"))
+                                         (VarE (mkName ("s" <> show k)))))
+                       []
+
+    -- Dec sizeOf = e_n
+    sizeOfD = FunD (mkName "sizeOf")
+                     [Clause [WildP]
+                             (NormalB (VarE (mkName ("e" <> show arity))))
+                             calcDs]
+
+    -- Dec alignment = maximum [a_1, ..., a_n]
+    alignmentD = FunD (mkName "alignment")
+                      [Clause [WildP]
+                              (NormalB (AppE (VarE (mkName "maximum"))
+                                             (ListE (map (\k -> (VarE (mkName ("a" <> show k))))
+                                                         [1 .. arity]))))
+                              calcDs]
+    -- Dec peek = pure Con <*> peek (plusPtr p o_1) <*> ... <*> peek (plusPtr p o_n)
+    peekD = FunD (mkName "peek")
+                 [Clause [VarP (mkName "p")]
+                         (NormalB (foldl (\e k -> UInfixE e (VarE (mkName "<*>"))
+                                                            (AppE (VarE (mkName "peek"))
+                                                                  (AppE (AppE (VarE (mkName "plusPtr"))
+                                                                              (VarE (mkName "p")))
+                                                                        (VarE (mkName ("b" <> show k))))))
+                                         (AppE (VarE (mkName "pure")) (ConE name))
+                                         [1 .. arity]))
+                         calcDs]
+
+
+    -- Dec poke p (Con v_1 ... v_n) = pure () <* poke (plusPtr p o_1) v_1 <* ... <* poke (plusPtr p o_n) v_n
+    pokeD = FunD (mkName "poke")
+                 [Clause [VarP (mkName "p"),
+                          ConP name (map (\k -> VarP (mkName ("v" <> show k))) [1 .. arity])]
+                         (NormalB (foldl (\e k -> UInfixE e (VarE (mkName "<*"))
+                                                            (AppE (AppE (VarE (mkName "poke"))
+                                                                        (AppE (AppE (VarE (mkName "plusPtr"))
+                                                                                    (VarE (mkName "p")))
+                                                                              (VarE (mkName ("b" <> show k)))))
+                                                                  (VarE (mkName ("v" <> show k)))))
+                                         (AppE (VarE (mkName "pure")) (TupE []))
+                                         [1 .. arity]))
+                         calcDs]
+
 
 recordConFunDecs :: Bool -> Int -> [Dec]
 recordConFunDecs strict arity =
