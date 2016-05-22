@@ -58,4 +58,4 @@ library
     transformers >= 0.2 && < 0.6,
     basic-lens == 0.0.*,
     base-prelude >= 0.1 && < 2,
-    base >= 4.6 && < 5
+    base >= 4.6 && < 4.9
