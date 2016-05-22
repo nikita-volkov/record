@@ -3,14 +3,23 @@ module Record.TH where
 
 import BasePrelude hiding (Proxy)
 import GHC.TypeLits
-import Language.Haskell.TH hiding (classP)
+import Language.Haskell.TH
 
 
-classP :: Name -> [Type] -> Pred
+classPCompat :: Name -> [Type] -> Pred
 #if MIN_VERSION_template_haskell(2,10,0)
-classP n tl = foldl AppT (ConT n) tl
+classPCompat n tl = foldl AppT (ConT n) tl
 #else
-classP = ClassP
+classPCompat = ClassP
+#endif
+
+instanceDCompat :: Cxt -> Type -> [Dec] -> Dec
+#if MIN_VERSION_template_haskell(2,11,0)  
+instanceDCompat =
+  InstanceD Nothing
+#else
+instanceDCompat =
+  InstanceD
 #endif
 
 recordTypeDec :: Bool -> Int -> Dec
@@ -78,7 +87,7 @@ data FieldInstanceDecMode =
 
 fieldInstanceDec :: FieldInstanceDecMode -> Int -> Int -> Dec
 fieldInstanceDec mode arity fieldIndex =
-  InstanceD [] headType decs
+  instanceDCompat [] headType decs
   where
     headType =
       foldl1 AppT 
@@ -143,9 +152,10 @@ fieldInstanceDec mode arity fieldIndex =
 
 recordStorableInstanceDec :: Bool -> Int -> Dec
 recordStorableInstanceDec strict arity =
-  InstanceD context (AppT (ConT (mkName "Storable")) recordType)
-            [sizeOfD, inlineP "sizeOf", alignmentD, inlineP "alignment"
-            , peekD, inlineP "peek", pokeD, inlineP "poke"]
+  instanceDCompat
+  context
+  (AppT (ConT (mkName "Storable")) recordType)
+  [sizeOfD, inlineP "sizeOf", alignmentD, inlineP "alignment", peekD, inlineP "peek", pokeD, inlineP "poke"]
   where
     name = recordName strict arity
     recordType =
@@ -153,7 +163,7 @@ recordStorableInstanceDec strict arity =
                           (VarT (mkName ("v" <> show i))))
             (ConT name)
             [1 .. arity]
-    context = map (\i -> classP (mkName "Storable")  [VarT (mkName ("v" <> show i))])
+    context = map (\i -> classPCompat (mkName "Storable")  [VarT (mkName ("v" <> show i))])
                   [1 .. arity]
     inlineP name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
     -- Decs a_k = alignment, s_k = size, b_k = begin offset, e_k = end+1 offset

@@ -2,6 +2,7 @@ env:
   - ghc=7.6.1  cabal=1.18 lower_bound_dependencies=1
   - ghc=7.8.1  cabal=1.18
   - ghc=7.10.1 cabal=1.22 benchmarks=1 tests=1
+  - ghc=8.0.1  cabal=1.24 benchmarks=1 tests=1
   
 install:
   # Set up the Shell to treat the semicolon as &&
@@ -37,7 +38,7 @@ install:
       $([ "$tests" = "1" ] && echo "--enable-tests")
       $([ "$benchmarks" = "1" ] && echo "--enable-benchmarks")
   # Build the library
-  - travis_wait cabal build
+  - cabal build
   # Configure and build the remaining stuff
   - cabal configure 
       $([ "$tests" = "1" ] && echo "--enable-tests")
@@ -49,5 +50,5 @@ script:
   - |
     if [ "$tests" = "1" ];
     then
-      travis_wait cabal test --show-details=always;
+      cabal test --show-details=always;
     fi;

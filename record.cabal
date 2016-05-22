@@ -53,7 +53,7 @@ library
     Record
   build-depends:
     -- 
-    template-haskell == 2.*,
+    template-haskell >= 2.8 && < 2.12,
     -- 
     transformers >= 0.2 && < 0.6,
     basic-lens == 0.0.*,
