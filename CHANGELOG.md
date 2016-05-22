@@ -1,3 +1,6 @@
+# 0.4.1
+* Fixes and dependency updates
+
 # 0.4.0
 * Drop the quasi-quoters
 * Drop the "Lens" module in preference to a dependency on the "basic-lens" library
