@@ -1,7 +1,7 @@
 name:
   record
 version:
-  0.3.1.2
+  0.3.2
 synopsis:
   First class records implemented with quasi-quotation
 description:
@@ -70,13 +70,14 @@ library
     -- 
     attoparsec >= 0.12 && < 0.14,
     -- 
-    text,
+    text >= 1 && < 2,
     --
-    template-haskell,
+    template-haskell >= 2.8 && < 3,
+    template-haskell-compat-v0208 == 0.1.*,
     -- 
-    transformers >= 0.2 && < 0.5,
-    base-prelude >= 0.1 && < 0.2,
-    base >= 4.6 && < 4.9
+    transformers >= 0.2 && < 0.6,
+    base-prelude >= 0.1 && < 2,
+    base >= 4.6 && < 5
 
 
 test-suite doctest

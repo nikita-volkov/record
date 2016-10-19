@@ -17,6 +17,7 @@ import Record.Lens (Lens)
 import Language.Haskell.TH
 import Foreign.Storable
 import Foreign.Ptr (plusPtr)
+import qualified TemplateHaskell.Compat.V0208 as A
 
 
 -- *
@@ -73,7 +74,7 @@ return $ flip map [1 .. 24] $ \arity ->
     conTypes =
       do
         i <- [1 .. arity]
-        return $ (,) (NotStrict) (VarT (mkName ("v" <> show i)))
+        return $ (,) (A.notStrict) (VarT (mkName ("v" <> show i)))
     derivingNames =
 #if MIN_VERSION_base(4,7,0)
       [''Show, ''Eq, ''Ord, ''Typeable, ''Generic]
@@ -81,7 +82,7 @@ return $ flip map [1 .. 24] $ \arity ->
       [''Show, ''Eq, ''Ord, ''Generic]
 #endif
     in
-      DataD [] typeName varBndrs [NormalC typeName conTypes] derivingNames
+      A.dataD [] typeName varBndrs [NormalC typeName conTypes] derivingNames
 
 
 -- Generate instances of Foreign.Storable
@@ -145,9 +146,9 @@ return $ flip map [1 .. 24] $ \arity ->
                                              (nameE ("v" <> show i)))) [1..arity])) [])]
     inlineFun name = PragmaD $ InlineP (mkName name) Inline FunLike AllPhases
   in
-    InstanceD context (AppT (ConT (mkName "Storable")) recordType)
-              [sizeOfFun, inlineFun "sizeOf", alignmentFun, inlineFun "alignment"
-              , peekFun, inlineFun "peek", pokeFun, inlineFun "poke"]
+    A.instanceD context (AppT (ConT (mkName "Storable")) recordType)
+                [sizeOfFun, inlineFun "sizeOf", alignmentFun, inlineFun "alignment"
+                , peekFun, inlineFun "peek", pokeFun, inlineFun "poke"]
 
 -- *
 -------------------------
