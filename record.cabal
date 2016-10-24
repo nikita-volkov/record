@@ -9,6 +9,10 @@ description:
   It is intended to be used in conjunction with
   <http://hackage.haskell.org/package/record-preprocessor the "record-preprocessor">,
   which enables a Haskell syntax extension.
+  .
+  If you're looking for the Template Haskell version of the library,
+  please check out the @0.3.*@ versions.
+  Those are maintained as well.
 category:
   Control, Data Structures, Records
 homepage:
