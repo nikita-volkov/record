@@ -33,9 +33,17 @@ license-file:
 build-type:
   Custom
 cabal-version:
-  >=1.10
+  >=1.18
 extra-source-files:
   CHANGELOG.md
+
+
+custom-setup
+  setup-depends:
+    Cabal >= 1.10 && <2.5,
+    base  >= 4.5 && <5,
+    cabal-doctest >= 1 && <1.1,
+    filepath
 
 
 source-repository head
