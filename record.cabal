@@ -73,7 +73,7 @@ library
     text >= 1 && < 2,
     --
     template-haskell >= 2.8 && < 3,
-    template-haskell-compat-v0208 == 0.1.*,
+    template-haskell-compat-v0208 >= 0.1.1.1 && < 0.2,
     -- 
     transformers >= 0.2 && < 0.6,
     base-prelude >= 0.1 && < 2,
